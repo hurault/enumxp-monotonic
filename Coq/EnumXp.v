@@ -651,7 +651,7 @@ Proof.
   (* cas général *)
   simpl.
   intros.
-  destruct (mem i p).
+  destruct (NatSet.mem i p).
   simpl.
   f_equal.
   specialize IHv with  (i:=(S i)) (p:=p) (f:=f).
@@ -794,7 +794,7 @@ Proof.
   (* cas général *)
   intros.
   simpl.
-  destruct (mem i p).
+  destruct (NatSet.mem i p).
   (* cas 1 *)
   specialize IHv with (i:=(S i)) (p:=p).
   split.
@@ -889,7 +889,7 @@ Lemma get_in_p_build_vl_vu_aux : forall  (v : list T) (i:nat) (p : NatSet.t) (f:
     intro.
     destruct j.
       (* j = 0*)
-      cut (mem i p = true).
+      cut (NatSet.mem i p = true).
       intro rmem.
       rewrite rmem.
       unfold get.
@@ -915,7 +915,7 @@ Lemma get_in_p_build_vl_vu_aux : forall  (v : list T) (i:nat) (p : NatSet.t) (f:
       generalize H1.
       simpl.
       lia.
-      destruct (mem i p).
+      destruct (NatSet.mem i p).
         (* mem i p *)
         cut (i + S j = S i + j).
         intro r.
@@ -936,7 +936,7 @@ Lemma get_in_p_build_vl_vu_aux : forall  (v : list T) (i:nat) (p : NatSet.t) (f:
     intro.
     destruct j.
       (* j = 0*)
-      cut (mem i p = false).
+      cut (NatSet.mem i p = false).
       intro rmem.
       rewrite rmem.
       unfold get.
@@ -950,7 +950,7 @@ Lemma get_in_p_build_vl_vu_aux : forall  (v : list T) (i:nat) (p : NatSet.t) (f:
         pose proof mem_spec.
         specialize H1 with (s:=p) (x:=i).
         intros.
-        destruct (mem i p).
+        destruct (NatSet.mem i p).
         tauto.
         reflexivity.
         lia.
@@ -963,7 +963,7 @@ Lemma get_in_p_build_vl_vu_aux : forall  (v : list T) (i:nat) (p : NatSet.t) (f:
       generalize H1.
       simpl.
       lia.
-      destruct (mem i p).
+      destruct (NatSet.mem i p).
         (* mem i p *)
         simpl.
         apply H2.
@@ -3166,8 +3166,10 @@ Obligation 1.
   apply (H1 k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
   auto.
   auto.
+  Qed.
 (* meas decrease for AXP *)
 Obligation 2.
+Admitted.
 (* Rec OK for CXP *)
 Obligation 3.
   apply valid_CNF_incr.
@@ -3206,6 +3208,7 @@ Obligation 3.
     auto.
     auto.
   auto.
+  Qed.
 (* meas decrease for CXP *)
 Obligation 4.
 Admitted.
