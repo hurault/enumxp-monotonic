@@ -1,5 +1,5 @@
-Require Import ListUtil.
-Require Import FeatureProperties.
+From EnumXP Require Export ListUtil.
+From EnumXP Require Export FeatureProperties.
 Require Import Extraction.
 Require Import Arith Lia Init.Datatypes.
 Require Import Coq.Program.Wf.
