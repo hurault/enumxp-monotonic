@@ -436,8 +436,8 @@ Import NatSet.
 Module NatSetProp := MSetProperties.WPropertiesOn Nat_as_OT_Leibniz NatSet.
 
 Import NatSetProp.
-Require Import FeatureProperties.
-Require Import CorrectFindXp.
+From EnumXP Require Export FeatureProperties.
+From EnumXP Require Export CorrectFindXp.
 
 Open Scope list_scope.
 
