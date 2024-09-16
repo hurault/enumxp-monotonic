@@ -1,4 +1,5 @@
 Require Import Extraction.
+Require Import Program.
 Require Import Arith Lia Init.Datatypes.
 Require Import Coq.Program.Wf.
 Require Import Coq.Logic.Classical.
@@ -3143,8 +3144,8 @@ Program Fixpoint enumXp_aux
   match (sat h) with
   | None => nil
   | Some s => 
-    let (vl,vu):=(build_vl_vu v s) in
-    if (Tk_eq_dec (k vl) (k vu)) then
+    let '(vl,vu):=(build_vl_vu v s) in
+    if dec (Tk_eq_dec (k vl) (k vu)) then
       let p := (findAXp k v s) in
       (AXp p)::(enumXp_aux k kstable knt sat scorrect v bv (CNF.add (AXp2Clause p) h) _)
     else
@@ -3152,7 +3153,61 @@ Program Fixpoint enumXp_aux
       let p2 := (findCXp k v s') in
       (CXp p2)::(enumXp_aux k kstable knt sat scorrect v bv ( CNF.add (CXp2Clause p2) h) _ )
   end.
+(* Rec OK for AXP *)
 Obligation 1.
+  apply valid_CNF_incr.
+  exact vcnf.
+  apply valid_AXp2Clause.
+  apply valid_set_findAXp.
+  split.
+  exact kstable.
+  split.
+  pose proof seeded_is_WAXP.
+  apply (H1 k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+  auto.
+  auto.
+(* meas decrease for AXP *)
+Obligation 2.
+(* Rec OK for CXP *)
+Obligation 3.
+  apply valid_CNF_incr.
+  exact vcnf.
+  apply valid_CXp2Clause.
+  apply valid_set_findCXp.
+  split.
+  exact kstable.
+  split.
+  exact knt.
+  split.
+  pose proof seeded_is_WCXP.
+  cut (NatSet.Equal (diff featureSet (diff featureSet s)) s).
+  intro dd.
+  apply NatSet.eq_leibniz in dd.
+  rewrite dd.
+  apply (H1 k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+  split;auto;split;auto;split;auto;split; auto;split;auto;split;auto.
+  unfold sat_correct in scorrect.
+  unfold sat_index_bound in scorrect.
+  destruct scorrect.
+  specialize H3 with (p:=h) (r:=s).
+  apply H3.
+  symmetry.
+  auto.
+  auto.
+    (* diff featureSet (diff featureSet s) = s *)
+    apply diff_diff.
+    unfold sat_correct in scorrect.
+    unfold sat_index_bound in scorrect.
+    destruct scorrect.
+    specialize H3 with (p:=h) (r:=s).
+    apply valid_set_in_featureSet.
+    apply H3.
+    symmetry.
+    auto.
+    auto.
+  auto.
+(* meas decrease for CXP *)
+Obligation 4.
 Admitted.
 
 Definition enumXp (k : list T -> Tk) (kstable : stable k) (sat : CNF.t -> option NatSet.t) (scorrect : sat_correct sat) (v: list T) (bv : length v = nb_feature /\ is_bounded v): list Xp := 
