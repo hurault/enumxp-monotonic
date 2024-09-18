@@ -15,6 +15,7 @@ Require Import MSets.
 Require Import MSetProperties.
 Require Import MSetInterface.
 
+
 Inductive literal : Type :=
   | top : nat -> literal
   | bot : nat -> literal.
@@ -3162,14 +3163,16 @@ Obligation 1.
   split.
   exact kstable.
   split.
-  pose proof seeded_is_WAXP.
-  apply (H1 k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+  apply (seeded_is_WAXP k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
   auto.
   auto.
   Qed.
 (* meas decrease for AXP *)
 Obligation 2.
-Admitted.
+apply (AXp_term k sat v h s kstable (conj H H0) scorrect vcnf (symmetry Heq_anonymous0) (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+auto.
+exact e.
+Qed.
 (* Rec OK for CXP *)
 Obligation 3.
   apply valid_CNF_incr.
@@ -3181,18 +3184,17 @@ Obligation 3.
   split.
   exact knt.
   split.
-  pose proof seeded_is_WCXP.
   cut (NatSet.Equal (diff featureSet (diff featureSet s)) s).
   intro dd.
   apply NatSet.eq_leibniz in dd.
   rewrite dd.
-  apply (H1 k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+  apply (seeded_is_WCXP k v s (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
   split;auto;split;auto;split;auto;split; auto;split;auto;split;auto.
   unfold sat_correct in scorrect.
   unfold sat_index_bound in scorrect.
   destruct scorrect.
-  specialize H3 with (p:=h) (r:=s).
-  apply H3.
+  specialize H2 with (p:=h) (r:=s).
+  apply H2.
   symmetry.
   auto.
   auto.
@@ -3201,9 +3203,9 @@ Obligation 3.
     unfold sat_correct in scorrect.
     unfold sat_index_bound in scorrect.
     destruct scorrect.
-    specialize H3 with (p:=h) (r:=s).
+    specialize H2 with (p:=h) (r:=s).
     apply valid_set_in_featureSet.
-    apply H3.
+    apply H2.
     symmetry.
     auto.
     auto.
@@ -3211,22 +3213,43 @@ Obligation 3.
   Qed.
 (* meas decrease for CXP *)
 Obligation 4.
-Admitted.
+apply (CXp_term k sat v h s (conj kstable knt) (conj H H0) scorrect vcnf (symmetry Heq_anonymous0) (build_vl_vu_aux 0 v s lambda) (build_vl_vu_aux 0 v s nu)).
+auto.
+exact e.
+Qed.
 
-Definition enumXp (k : list T -> Tk) (kstable : stable k) (sat : CNF.t -> option NatSet.t) (scorrect : sat_correct sat) (v: list T) (bv : length v = nb_feature /\ is_bounded v): list Xp := 
-enumXp_aux k kstable sat scorrect v bv CNF.empty.
+
+Functional Scheme enumXp_aux_ind := Induction for enumXp_aux Sort Prop.
+
+Theorem valid_CNF_empty : valid_CNF CNF.empty.
+Proof.
+unfold valid_CNF.
+unfold CNF.For_all.
+intros.
+apply CNF.empty_spec in H.
+easy.
+Qed.
+
+Definition enumXp 
+(k : list T -> Tk) (kstable : stable k)  (knt : not_trivial k)
+(sat : CNF.t -> option NatSet.t) (scorrect : sat_correct sat) 
+(v: list T) (bv : length v = nb_feature /\ is_bounded v): list Xp := 
+enumXp_aux k kstable knt sat scorrect v bv CNF.empty valid_CNF_empty.
 
 (* Correction *)
 
-Theorem AXp_all : forall (k : list T -> Tk) (kstable : stable k) (sat : CNF.t -> option NatSet.t) (sc : sat_correct sat) (v : list T) (bv : length v = nb_feature /\ is_bounded v),
+Theorem AXp_all : forall 
+(k : list T -> Tk) (kstable : stable k) (knt : not_trivial k)
+(sat : CNF.t -> option NatSet.t) (sc : sat_correct sat) 
+(v : list T) (bv : length v = nb_feature /\ is_bounded v),
    sat_correct sat
 /\ length v = nb_feature ->
-(forall (s:NatSet.t), (List.In (AXp s) (enumXp k kstable sat sc v bv)) -> (is_AXp k v s)).
+(forall (s:NatSet.t), (List.In (AXp s) (enumXp k kstable knt sat sc v bv)) -> (is_AXp k v s)).
 Proof.
   intro;intro;intro;intro;intro;intro;intro;intro.
   unfold enumXp.
-  intro.
-  functional induction (enumXp_aux k kstable sat sc v bv CNF.empty) using enumXp_aux_ind.
+  intros.
+  functional induction (enumXp_aux k kstable knt sat sc v bv CNF.empty valid_CNF_empty).
   elim H0.
   elim H0.
   intro.
