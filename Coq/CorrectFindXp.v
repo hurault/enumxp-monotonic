@@ -1326,27 +1326,32 @@ end.
 (* moche mais plus facil à manipuler en coq *)
 (* La terminaison est évidente et la manipulation est plus simple qu'avec Programm Fixpoint *)
 (* i = nb_feature-j *)
-Fixpoint findAXp_aux_j (k : list T -> Tk)  (j:nat) (v vl vu: list T) (p:list nat) {struct j}:
+(* Update seed: on suppose que les attributs dans s ont été libérés (avec freeAttr), on se contente de les ignorer *)
+Fixpoint findAXp_aux_j (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat) {struct j}:
 list nat :=
 match j with
 | 0 => p 
 | S jmoins1 => 
+  if mem_nat j s then findAXp_aux_j k s jmoins1 v vl vu p
+  else
+   (* if j in S then return findAXp_aux_j k jmoins v vl vu p s *)
   let '(nvl,nvu) := freeAttr (nb_feature-j) vl vu in
     match Tk_eq_dec (k nvl) (k nvu) with
     | false => let '(nvl,nvu,np) := fixAttr (nb_feature-j) v nvl nvu p in
-               findAXp_aux_j k jmoins1 v nvl nvu np
-    | true => findAXp_aux_j k jmoins1 v nvl nvu p
+               findAXp_aux_j k s jmoins1 v nvl nvu np
+    | true => findAXp_aux_j k s jmoins1 v nvl nvu p
     end 
 end.
 
 Lemma findAXp_aux_j_spec2 :
- forall  (k : list T -> Tk) (j:nat) (v vl vu: list T) (p:list nat),
+ forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
    j>0 
+/\ ~ mem j s
 /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) <> (k nvu))
--> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in let '(nnvl,nnvu,np) := fixAttr (nb_feature-j) v nvl nvu p in findAXp_aux_j k j v vl vu p = findAXp_aux_j k (j-1) v nnvl nnvu np.
+-> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in let '(nnvl,nnvu,np) := fixAttr (nb_feature-j) v nvl nvu p in findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v nnvl nnvu np.
 Proof.
 intros.
-destruct H.
+destruct H as (H & H1 & H0).
 rewrite (surjective_pairing (freeAttr (nb_feature - j) vl vu)).
 rewrite (surjective_pairing (fixAttr (nb_feature - j) v (fst (freeAttr (nb_feature - j) vl vu))
 (snd (freeAttr (nb_feature - j) vl vu)) p )).
@@ -1375,6 +1380,9 @@ rewrite (surjective_pairing (fst
 (fixAttr (nb_feature - S j) v
    (fst (freeAttr (nb_feature - S j) vl vu))
    (snd (freeAttr (nb_feature - S j) vl vu)) p))).
+destruct (mem_nat (S j) s) eqn:Heq.
+apply mem_coherent in Heq.
+contradiction.
 simpl.
 reflexivity.
 (* Tk_eq_dec *)
@@ -1386,14 +1394,13 @@ apply Tk_eq_coherent_neq.
 lia.
 Qed.
 
-
 Lemma findAXp_aux_j_spec3 :
-forall  (k : list T -> Tk) (j:nat) (v vl vu: list T) (p:list nat),
-j>0 /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) = (k nvu))
--> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in findAXp_aux_j k j v vl vu p = findAXp_aux_j k (j-1) v nvl nvu p.
+forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
+j>0 /\ (~ mem j s) /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) = (k nvu))
+-> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v nvl nvu p.
 Proof.
 intros.
-destruct H.
+destruct H as (H & H1 & H0).
 rewrite (surjective_pairing (freeAttr (nb_feature - j) vl vu)).
 destruct j.
 (* j = 0 : 0>0 en hypothèse *)
@@ -1408,6 +1415,9 @@ rewrite (surjective_pairing (freeAttr (nb_feature - S j) vl vu)).
  (k (snd (freeAttr (nb_feature - S j) vl vu))) = true).
 intro r2.
 rewrite r2.
+destruct (mem_nat (S j) s) eqn:Heq.
+apply mem_coherent in Heq.
+contradiction.
 simpl.
 reflexivity.
 (* Tk_eq_dec *)
@@ -1419,20 +1429,28 @@ apply Tk_eq_coherent_eq.
 lia.
 Qed.
 
+Lemma findAXp_aux_j_spec4 :
+forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (s:list nat) (p:list nat),
+j>0 /\ mem j s
+-> findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v vl vu p.
+Proof.
+Admitted.
 
-Definition findAXp_aux  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat):
-list nat := findAXp_aux_j k (nb_feature-i) v vl vu p.
+
+Definition findAXp_aux  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat):
+list nat := findAXp_aux_j k s (nb_feature-i) v vl vu p.
 
 
 Lemma findAXp_aux_spec2 : 
-forall  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat),
-i>= 0 /\ i < nb_feature 
+forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
+i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s
 /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))
--> let '(nvl,nvu) :=  freeAttr i vl vu in let '(nnvl,nnvu,np) := fixAttr i v nvl nvu p in findAXp_aux k i v vl vu p = findAXp_aux k (i+1) v nnvl nnvu np.
+-> let '(nvl,nvu) :=  freeAttr i vl vu in let '(nnvl,nnvu,np) := fixAttr i v nvl nvu p in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nnvl nnvu np.
 Proof.
 intros.
 destruct H.
 destruct H0.
+destruct H1 as (H12 & H1).
 cut (exists j:nat, j= nb_feature - i).
 intro.
 destruct H2 as (j,H2).
@@ -1450,6 +1468,9 @@ apply findAXp_aux_j_spec2.
 (*Hyp findAXp_aux_j_spec2 *)
 split.
 lia.
+split.
+rewrite H2.
+assumption.
 rewrite <- ri.
 exact H1.
 (* egalité *)
@@ -1461,14 +1482,15 @@ reflexivity.
 Qed.
 
 Lemma findAXp_aux_spec3 : 
-forall  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat),
-i>= 0 /\ i < nb_feature 
+forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
+i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s
 /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu))
--> let '(nvl,nvu) :=  freeAttr i vl vu in findAXp_aux k i v vl vu p = findAXp_aux k (i+1) v nvl nvu p.
+-> let '(nvl,nvu) :=  freeAttr i vl vu in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nvl nvu p.
 Proof.
 intros.
 destruct H.
 destruct H0.
+destruct H1 as (H12 & H1).
 cut (exists j:nat, j= nb_feature - i).
 intro.
 destruct H2 as (j,H2).
@@ -1487,6 +1509,9 @@ apply findAXp_aux_j_spec3.
 split.
 lia.
 rewrite <- ri.
+split.
+rewrite H2.
+assumption.
 exact H1.
 (* egalité *)
 lia.
@@ -1495,6 +1520,13 @@ lia.
 exists (nb_feature-i).
 reflexivity.
 Qed.
+
+Lemma findAXp_aux_spec4 :
+forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
+i>= 0 /\ i < nb_feature /\ mem (nb_feature - i) s
+-> findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v vl vu p.
+Proof.
+Admitted.
 
 
 Definition R0  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
@@ -1559,14 +1591,14 @@ length nvu = nb_feature /\
 /\ (k nvl) <> (k nvu)).
 
 
-Definition E1  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
-  is_weak_AXp k v (findAXp_aux k i v vl vu p).
+Definition E1  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
+  is_weak_AXp k v (findAXp_aux k s i v vl vu p).
 
-Definition E2  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
-  is_sorted (findAXp_aux k i v vl vu p).
+Definition E2  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
+  is_sorted (findAXp_aux k s i v vl vu p).
 
-Definition E3  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
-  forall (x:nat), forall (x0 x1 : list nat), ((findAXp_aux k i v vl vu p) = x0++(x::x1)
+Definition E3  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
+  forall (x:nat), forall (x0 x1 : list nat), ((findAXp_aux k s i v vl vu p) = x0++(x::x1)
 -> 
 exists  (vl vu : list T),
 length vl = nb_feature /\
@@ -1633,13 +1665,13 @@ Lemma my_induction :
   lia.
 Qed.
 
-Definition R_implies_E_AXp (k : list T -> Tk) (i:nat) : Prop :=
+Definition R_implies_E_AXp (k : list T -> Tk) (s : list nat) (i:nat) : Prop :=
   forall    (v vl vu: list T) (p:list nat), 
   (R0 k i v vl vu p /\
    R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
    R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
    R9 k i v vl vu p /\ R10 k i v vl vu p) 
-  -> (E1 k i v vl vu p) /\ (E2 k i v vl vu p) /\ (E3 k i v vl vu p).
+  -> (E1 k s i v vl vu p) /\ (E2 k s i v vl vu p) /\ (E3 k s i v vl vu p).
 
 Lemma preserveR0Cas2_AXp : 
 forall  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
@@ -4698,9 +4730,9 @@ Qed.
 
 
 Lemma R_implies_E_findAXp : forall (k : list T -> Tk) ,
-   (stable k) -> (forall (i:nat),  i>=0 /\ i < nb_feature +1 -> R_implies_E_AXp k i).
+   (stable k) -> (forall (s : list nat) (i:nat),  i>=0 /\ i < nb_feature +1 -> R_implies_E_AXp k s i).
 Proof.
-intros k k_stable.
+intros k k_stable s.
 apply (my_induction nb_feature).
 (* cas général *)
 split.
@@ -4710,10 +4742,12 @@ destruct H.
 unfold E1.
 unfold E2.
 unfold E3.
-(* couper selon les 3 cas du findAxp_aux *)
+(* couper selon les 4 cas du findAxp_aux *)
+(* TODO Quatrième cas ? *)
 cut ((i = nb_feature +1) 
-  \/ (i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))) 
-  \/ (i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)))).
+  \/ (i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))) 
+  \/ (i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)))
+  \/ (i>= 0 /\ i < nb_feature /\ mem (nb_feature - i) s /\ True)).
 intro cases.
 destruct cases.
 (* cas terminal, pas possible *)
@@ -4724,7 +4758,7 @@ destruct H3.
 (* cas 2 *)
 destruct H3.
 destruct H4.
-cut (let '(nvl,nvu) :=  freeAttr i vl vu in let '(nnvl,nnvu,np) := fixAttr i v nvl nvu p in findAXp_aux k i v vl vu p = findAXp_aux k (i+1) v nnvl nnvu np).
+cut (let '(nvl,nvu) :=  freeAttr i vl vu in let '(nnvl,nnvu,np) := fixAttr i v nvl nvu p in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nnvl nnvu np).
 rewrite (surjective_pairing (freeAttr i vl vu)).
 rewrite (surjective_pairing (fixAttr i v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p)).
 rewrite (surjective_pairing (fst (fixAttr i v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p))).
@@ -4768,9 +4802,9 @@ tauto.
 apply findAXp_aux_spec2.
 auto.
 (*  cas 3 *)
-destruct H3.
+destruct H3 as [(H3 & H4) | H3].
 destruct H4.
-cut (let '(nvl,nvu) :=  freeAttr i vl vu in findAXp_aux k i v vl vu p = findAXp_aux k (i+1) v nvl nvu p).
+cut (let '(nvl,nvu) :=  freeAttr i vl vu in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nvl nvu p).
 rewrite (surjective_pairing (freeAttr i vl vu)).
 intro r.
 rewrite r.
@@ -4811,6 +4845,9 @@ tauto.
 (* lien rec *)
 apply findAXp_aux_spec3.
 auto.
+(* cas 4 *)
+destruct H3 as (H3 & H4 & H5 & H6).
+admit.
 (* Prouver qu'on a bien que ces 3 cas possible *)
 right.
 cut (i >= 0 /\
@@ -4819,6 +4856,11 @@ i < nb_feature /\
 intro r.
 destruct r.
 destruct H4.
+destruct (mem_not_mem (nb_feature - i) s).
+right.
+right.
+repeat (split; [assumption |]).
+admit.
 destruct H5.
 left.
 auto.
@@ -4865,10 +4907,10 @@ simpl.
 unfold R10 in H.
 apply H.
 lia.
-Qed.
+Admitted.
 
-Program Definition findAXp (k : list T -> Tk) (v: list T) : list nat :=
-  findAXp_aux k 0 v v v nil.
+Program Definition findAXp (k : list T -> Tk) (s : list nat) (v: list T) : list nat :=
+  findAXp_aux k s 0 v v v nil.
 
 
 Lemma R_init_Axp : forall (k : list T -> Tk)  (v: list T), 
@@ -4949,7 +4991,7 @@ Proof.
    apply list_mem_middle.
 Qed.
 
-Lemma pre_post_findAXp : forall (k : list T -> Tk)  (v: list T), 
+Lemma pre_post_findAXp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (
 stable k
 /\
@@ -4959,9 +5001,9 @@ length v = nb_feature
 led (lambda j) (get j v) /\ led (get j v) (nu j))
 )
 -> 
-   is_weak_AXp k v (findAXp k v)
-/\ is_sorted (findAXp k v)
-/\ forall (x:nat), forall (x0 x1 : list nat), ((findAXp k v) = x0++(x::x1)
+   is_weak_AXp k v (findAXp k s v)
+/\ is_sorted (findAXp k s v)
+/\ forall (x:nat), forall (x0 x1 : list nat), ((findAXp k s v) = x0++(x::x1)
 -> 
 exists  (vl vu : list T),
 length vl = nb_feature /\
@@ -5482,14 +5524,14 @@ Proof.
    auto.
 Qed.
 
-Lemma minus_one_all_aux1 : forall (k : list T -> Tk)  (v :list T),
+Lemma minus_one_all_aux1 : forall (k : list T -> Tk) (s : list nat) (v :list T),
 stable k
 /\
 length v = nb_feature
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
--> is_weak_AXp k v (findAXp k v).
+-> is_weak_AXp k v (findAXp k s v).
 Proof.
    intros.
    apply pre_post_findAXp.
@@ -5499,14 +5541,14 @@ Qed.
 
 
 (* Lemmes pour minus_one_all_aux2 *)
-Lemma axp_inter_aux2 : forall (k : list T -> Tk)  (v : list T) (x: nat) (x0 x1 : list nat),
+Lemma axp_inter_aux2 : forall (k : list T -> Tk) (s : list nat) (v : list T) (x: nat) (x0 x1 : list nat),
 stable k 
 /\
 length v = nb_feature
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
-/\  findAXp k v =x0++(x::x1) -> 
+/\  findAXp k s v =x0++(x::x1) -> 
 (forall (e:nat), mem e x0 -> e > x).
 Proof.
    intros.
@@ -5523,7 +5565,7 @@ Proof.
    auto.
 Qed.
 
-Lemma axp_inter : forall (k : list T -> Tk) ,
+Lemma axp_inter : forall (k : list T -> Tk) (s : list nat),
 stable k
 -> (
 forall (v : list T),
@@ -5532,7 +5574,7 @@ length v = nb_feature
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
 -> 
-(forall (x:nat) (x0 x1 : list nat), findAXp k v =x0++(x::x1) -> 
+(forall (x:nat) (x0 x1 : list nat), findAXp k s v =x0++(x::x1) -> 
 (forall (e:nat), mem e x1 -> e < x)
 /\
 (forall (e:nat), mem e x0 -> e > x)
@@ -5546,7 +5588,7 @@ length vu = nb_feature /\
 /\ (k vl) <> (k vu)))
 ).
 Proof.
-   intros k k_stable.
+   intros k s k_stable.
    intros.
    split.
    (* (forall e : nat, mem e x1 -> e < x) *)
@@ -5571,7 +5613,7 @@ Proof.
    tauto.
    auto.
    (* exsits .... *)
-   generalize (pre_post_findAXp k v).
+   generalize (pre_post_findAXp k s v).
    intros.
    destruct H1.
    split.
@@ -5582,14 +5624,14 @@ Proof.
    auto.
 Qed.
 
-Lemma minus_one_all_aux2 : forall (k : list T -> Tk) (v :list T),
+Lemma minus_one_all_aux2 : forall (k : list T -> Tk) (s : list nat) (v :list T),
 stable k
 /\
 length v = nb_feature
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
--> forall (q:list nat), (is_minus_one q (findAXp k v)) -> not (is_weak_AXp k v q).
+-> forall (q:list nat), (is_minus_one q (findAXp k s v)) -> not (is_weak_AXp k v q).
 Proof.
 (* idée :
 p=x0++(Cons x x1) /\ q=x0++x1
@@ -5607,7 +5649,7 @@ mais comme ils sont différents, forcément un des deux qui ne vaut pas la même
 intros.
 destruct H as (k_stable,H).
 cut (exists (x:nat) (x0 x1 :list nat),
-  (findAXp k v = (x0++(x::x1))) /\ (q = x0++x1)).
+  (findAXp k s v = (x0++(x::x1))) /\ (q = x0++x1)).
 intros.
 destruct H1.
 destruct H1.
@@ -5679,7 +5721,7 @@ apply H5.
 cut False.
 tauto.
 lia.
-apply (axp_inter_aux2 k v x x0 x1).
+apply (axp_inter_aux2 k s v x x0 x1).
 split.
 apply k_stable.
 split.
@@ -5747,7 +5789,7 @@ apply H5.
 cut False.
 tauto.
 lia.
-apply (axp_inter_aux2 k v x x0 x1).
+apply (axp_inter_aux2 k s v x x0 x1).
 split.
 apply k_stable.
 split.
@@ -5789,7 +5831,7 @@ intro inter.
 destruct inter as (inf,inter).
 destruct inter as (sup,inter).
 apply inter.
-apply axp_inter.
+eapply axp_inter.
 apply k_stable.
 split.
 apply Lv.
@@ -5802,14 +5844,14 @@ auto.
 Qed.
 
 
-Theorem axp_all : forall (k : list T -> Tk) (v:list T),
+Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
 stable k
 -> (
 length v = nb_feature
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
--> is_AXp k v (findAXp k v)
+-> is_AXp k v (findAXp k s v)
 ).
 Proof.
    intros.
@@ -5818,7 +5860,7 @@ Proof.
    apply minus_one_all_aux1.
    tauto.
    intro.
-   apply (minus_one_implies_subset k v (findAXp k v)) .
+   apply (minus_one_implies_subset k v (findAXp k s v)) .
    apply minus_one_all_aux2.
    tauto.
 Qed.
