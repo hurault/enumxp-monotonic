@@ -1430,11 +1430,23 @@ lia.
 Qed.
 
 Lemma findAXp_aux_j_spec4 :
-forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (s:list nat) (p:list nat),
+forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
 j>0 /\ mem j s
 -> findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v vl vu p.
 Proof.
-Admitted.
+intros.
+destruct H.
+destruct j.
+lia.
+apply mem_coherent in H0.
+simpl.
+rewrite H0.
+cut (j = j - 0).
+intros.
+rewrite <- H1.
+reflexivity.
+lia.
+Qed.
 
 
 Definition findAXp_aux  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat):
@@ -1526,7 +1538,17 @@ forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat)
 i>= 0 /\ i < nb_feature /\ mem (nb_feature - i) s
 -> findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v vl vu p.
 Proof.
-Admitted.
+intros.
+destruct H as (H1 & H2 & H3).
+unfold findAXp_aux.
+replace (nb_feature - (i + 1)) with ((nb_feature - i) - 1).
+apply findAXp_aux_j_spec4.
+intros.
+split.
+lia.
+assumption.
+lia.
+Qed.
 
 
 Definition R0  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
@@ -4847,7 +4869,65 @@ apply findAXp_aux_spec3.
 auto.
 (* cas 4 *)
 destruct H3 as (H3 & H4 & H5 & H6).
-admit.
+replace (findAXp_aux k s i v vl vu p) with (findAXp_aux k s (i+1) v vl vu p).
+apply H0.
+(* préservation des require *)
+repeat split; try (unfold R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10 in H1; tauto).
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+destruct H1 as (_ & H1 & _).
+apply H1.
+lia.
+unfold R3.
+lia.
+destruct H1 as (_ & _ & _ & _ & _ & H1 & _).
+unfold R5 in *.
+intros.
+apply H1.
+destruct H7 as [H7 | [H7 | H7]]; try auto.
+left.
+lia.
+destruct H1 as (_ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+assumption.
+destruct H1 as (_ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+assumption.
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+destruct H7 as (H7 & H8 & H9).
+repeat split; try lia; try auto.
+admit. (* à revoir ! (R7) *)
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+destruct H7 as (H7 & H8 & H9).
+repeat split; try lia; try auto.
+admit. (* à revoir ! (R7) *)
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+destruct H7 as (H7 & H8 & H9 & H10 & H11).
+repeat split; try lia; try auto.
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & H1 & _).
+apply H1.
+destruct H7 as (H7 & H8 & H9 & H10 & H11).
+repeat split; try lia; try auto.
+(* lien rec *)
+rewrite <- findAXp_aux_spec4.
+reflexivity.
+split; try lia; try auto.
 (* Prouver qu'on a bien que ces 3 cas possible *)
 right.
 cut (i >= 0 /\
@@ -4860,7 +4940,7 @@ destruct (mem_not_mem (nb_feature - i) s).
 right.
 right.
 repeat (split; [assumption |]).
-admit.
+trivial.
 destruct H5.
 left.
 auto.
