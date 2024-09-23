@@ -1551,56 +1551,56 @@ lia.
 Qed.
 
 
-Definition R0  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R0  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
    List.length v = nb_feature
 /\ List.length vl = nb_feature
 /\ List.length vu = nb_feature.
 
-Definition R1  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R1  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
    forall (j:nat), j>=0 /\ j< nb_feature -> 
      led (lambda j) (get j v) /\ led (get j v) (nu j)
   /\ led (lambda j) (get j vl) /\ led (get j vl) (nu j)
   /\ led (lambda j) (get j vu) /\ led (get j vu) (nu j). 
 
 
-Definition R2  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R2  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   k vl = k vu /\ k vl = k v.
   (* k vl = k v since k is stable *)
 
-Definition R3  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R3  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   i >= 0.
 
-Definition R4  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R4  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat), 
      ((get j vl = lambda j) /\ (get j vu = nu j)) 
   \/ ((get j vl = get j v) /\ (get j vu = get j v)).
 
-Definition R4_bis  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R4_bis  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
     forall (j:nat), 
       (j>=0 /\ j< nb_feature) ->
        ((get j vl = lambda j) /\ (get j vu = nu j)) 
     \/ ((get j vl = get j v) /\ (get j vu = get j v)).
 
-Definition R5  (k : list T -> Tk)  (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R5  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
   (j>= i \/ j<0 \/ j>=nb_feature -> not (mem j p)).
 
-Definition R6  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R6  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
   ((mem j p) -> ((get j vl = get j v) /\ (get j vu = get j v))).
   
-Definition R7  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R7  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
   (j>=0 /\ j<i /\ not( mem j p)) -> ((get j vl = lambda j) /\ (get j vu = nu j)).
   
-Definition R8  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop := is_sorted p.
+Definition R8  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := is_sorted p.
 
-Definition R9  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R9  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
   (j>=i /\ j>=0 /\ i>=0 /\ j<nb_feature /\ i<nb_feature
   -> ((get j vl = get j v) /\ (get j vu = get j v))).
   
-Definition R10  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R10  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (x:nat), forall (x0 x1 : list nat), 
   (p = x0++(x::x1)
 -> 
@@ -1689,20 +1689,20 @@ Qed.
 
 Definition R_implies_E_AXp (k : list T -> Tk) (s : list nat) (i:nat) : Prop :=
   forall    (v vl vu: list T) (p:list nat), 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
   -> (E1 k s i v vl vu p) /\ (E2 k s i v vl vu p) /\ (E3 k s i v vl vu p).
 
 Lemma preserveR0Cas2_AXp : 
-forall  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
 i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-(R0 k i v vl vu p /\
-R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-R9 k i v vl vu p /\ R10 k i v vl vu p) 
--> R0 k (i + 1) v
+(R0 k s i v vl vu p /\
+R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+-> R0 k s (i + 1) v
 (fst
   (fst
      (fixAttr i v (fst (freeAttr i vl vu))
@@ -1831,13 +1831,13 @@ Qed.
 
 
 Lemma preserveR1Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
   i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R1 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R1 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -1935,13 +1935,13 @@ reflexivity.
 Qed.
 
 Lemma preserveR2Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R2 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R2 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2114,13 +2114,13 @@ Qed.
 
 
 Lemma preserveR3Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R3 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R3 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2141,13 +2141,13 @@ Qed.
    
 
 Lemma preserveR4_bisCas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R4_bis k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R4_bis k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2243,8 +2243,8 @@ exists l0.
 reflexivity.
 Qed.
 
-Lemma R4_implies_R4_bis : forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
-R4 k i v vl vu p -> R4_bis k i v vl vu p.
+Lemma R4_implies_R4_bis : forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
+R4 k s i v vl vu p -> R4_bis k s i v vl vu p.
 Proof.
    unfold R4.
    unfold R4_bis.
@@ -2252,8 +2252,8 @@ Proof.
    apply H.
 Qed.
 
-Lemma R4_bis_implies_R4 : forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
-R0 k i v vl vu p /\ R4_bis k i v vl vu p -> R4 k i v vl vu p.
+Lemma R4_bis_implies_R4 : forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
+R0 k s i v vl vu p /\ R4_bis k s i v vl vu p -> R4 k s i v vl vu p.
 Proof.
    unfold R0.
    unfold R4.
@@ -2291,13 +2291,13 @@ Qed.
 
 
 Lemma preserveR4Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R4 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R4 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2312,7 +2312,7 @@ Lemma preserveR4Cas2_AXp :
 Proof.
    intros.
    cut (
-      R0 k (i + 1) v
+      R0 k s (i + 1) v
       (fst
          (fst
             (fixAttr i v (fst (freeAttr i vl vu))
@@ -2325,7 +2325,7 @@ Proof.
          (fixAttr i v (fst (freeAttr i vl vu))
             (snd (freeAttr i vl vu)) p))   
    /\
-   R4_bis k (i + 1) v
+   R4_bis k s (i + 1) v
    (fst
       (fst
          (fixAttr i v (fst (freeAttr i vl vu))
@@ -2342,7 +2342,7 @@ Proof.
    apply preserveR0Cas2_AXp.
    apply H.
 
-   cut (R4_bis k i v vl vu p).
+   cut (R4_bis k s i v vl vu p).
    intro.
    apply preserveR4_bisCas2_AXp.
    tauto.
@@ -2351,13 +2351,13 @@ Proof.
 Qed.
 
 Lemma preserveR5Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R5 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R5 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2446,13 +2446,13 @@ Qed.
 
 
 Lemma preserveR6Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R6 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R6 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2586,13 +2586,13 @@ Qed.
 
 
 Lemma preserveR7Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R7 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R7 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2707,13 +2707,13 @@ Qed.
 
 
 Lemma preserveR8Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R8 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R8 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -2817,13 +2817,13 @@ Qed.
 
 
 Lemma preserveR9Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R9 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R9 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -3249,13 +3249,13 @@ Qed.
 
 
 Lemma preserveR10Cas2_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R10 k (i + 1) v
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R10 k s (i + 1) v
  (fst
     (fst
        (fixAttr i v (fst (freeAttr i vl vu))
@@ -3879,13 +3879,13 @@ Qed.
 
 
 Lemma preserveR0Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R0 k (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R0 k s (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
  Proof.
    intros. 
    unfold R0.
@@ -3930,13 +3930,13 @@ Lemma preserveR0Cas3_AXp :
 Qed.
 
 Lemma preserveR1Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-  R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-  R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-  R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R1 k (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R1 k s (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros. 
    unfold R1.
@@ -3998,13 +3998,13 @@ Qed.
    
 
 Lemma preserveR2Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p /\ (stable k)) 
- -> R2 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p /\ (stable k)) 
+ -> R2 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros. 
    unfold R2.
@@ -4181,13 +4181,13 @@ Proof.
    Qed.
 
 Lemma preserveR3Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R3 k (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R3 k s (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros.
    unfold R3.
@@ -4206,13 +4206,13 @@ Proof.
 
 
    Lemma preserveR4_bisCas3_AXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
    i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
-  -> R4_bis k (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+   (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+  -> R4_bis k s (i + 1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
  Proof.
    intros. 
    unfold R4_bis.
@@ -4287,13 +4287,13 @@ Proof.
 
 
 Lemma preserveR4Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R4 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R4 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros.
    apply R4_bis_implies_R4.
@@ -4301,7 +4301,7 @@ Proof.
    apply preserveR0Cas3_AXp.
    apply H.
 
-   cut (R4_bis k i v vl vu p).
+   cut (R4_bis k s i v vl vu p).
    intro.
    apply preserveR4_bisCas3_AXp.
    tauto.
@@ -4310,13 +4310,13 @@ Proof.
    Qed.
 
 Lemma preserveR5Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R5 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R5 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros.
    unfold R5.
@@ -4337,13 +4337,13 @@ Proof.
 
 
 Lemma preserveR6Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R6 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R6 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros. 
    unfold R6.
@@ -4420,13 +4420,13 @@ Proof.
    Qed.
 
 Lemma preserveR7Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R7 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R7 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros. 
    unfold R7.
@@ -4504,13 +4504,13 @@ Proof.
 
 
 Lemma preserveR8Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R8 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R8 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros.
    unfold R8.
@@ -4533,13 +4533,13 @@ Proof.
    Qed.
 
 Lemma preserveR9Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R9 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R9 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros. 
    unfold R9.
@@ -4603,13 +4603,13 @@ Proof.
    Qed.
 
 Lemma preserveR10Cas3_AXp : 
-  forall (k : list T -> Tk) (i:nat) (v vl vu:  list T) (p:list nat), 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
   i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2 k i v vl vu p /\ R3 k i v vl vu p /\ R4 k i v vl vu p /\
-   R5 k i v vl vu p /\ R6 k i v vl vu p /\ R7 k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9 k i v vl vu p /\ R10 k i v vl vu p) 
- -> R10 k (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+ -> R10 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
 Proof.
    intros.
    unfold R10.
@@ -4632,18 +4632,18 @@ Proof.
    Qed.
 
 
-Lemma ppost1_AXp :  forall (k : list T -> Tk) (v vl vu: list T) (p:list nat),
-  R0 k nb_feature v vl vu p /\
-  R1 k nb_feature v vl vu p /\
-  R2 k nb_feature v vl vu p /\
-  R3 k nb_feature v vl vu p /\
-  R4 k nb_feature v vl vu p /\
-  R5 k nb_feature v vl vu p /\
-  R6 k nb_feature v vl vu p /\
-  R7 k nb_feature v vl vu p /\
-  R8 k nb_feature v vl vu p /\
-  R9 k nb_feature v vl vu p /\
-  R10 k nb_feature v vl vu p /\
+Lemma ppost1_AXp :  forall (k : list T -> Tk) (s : list nat) (v vl vu: list T) (p:list nat),
+  R0 k s nb_feature v vl vu p /\
+  R1 k s nb_feature v vl vu p /\
+  R2 k s nb_feature v vl vu p /\
+  R3 k s nb_feature v vl vu p /\
+  R4 k s nb_feature v vl vu p /\
+  R5 k s nb_feature v vl vu p /\
+  R6 k s nb_feature v vl vu p /\
+  R7 k s nb_feature v vl vu p /\
+  R8 k s nb_feature v vl vu p /\
+  R9 k s nb_feature v vl vu p /\
+  R10 k s nb_feature v vl vu p /\
   stable k
 -> is_weak_AXp k v p.
 Proof.
@@ -4963,7 +4963,7 @@ cut (nb_feature - nb_feature = 0).
 intro r.
 rewrite r.
 simpl.
-apply (ppost1_AXp k v vl vu p).
+apply (ppost1_AXp k s v vl vu p).
 tauto.
 lia.
 (* post cond 2 *)
@@ -4993,15 +4993,15 @@ Program Definition findAXp (k : list T -> Tk) (s : list nat) (v: list T) : list 
   findAXp_aux k s 0 v v v nil.
 
 
-Lemma R_init_Axp : forall (k : list T -> Tk)  (v: list T), 
+Lemma R_init_Axp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (length v = nb_feature
 /\ 
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
 led (lambda j) (get j v) /\ led (get j v) (nu j))
 )
--> R0 k 0 v v v nil /\ R1 k 0 v v v nil /\ R2 k 0 v v v nil /\ R3 k 0 v v v nil /\ 
-R4 k 0 v v v nil /\ R5 k 0 v v v nil /\ R6 k 0 v v v nil /\ R7 k 0 v v v nil /\ 
-R8 k 0 v v v nil /\ R9 k 0 v v v nil /\ R10 k 0 v v v nil.
+-> R0 k s 0 v v v nil /\ R1 k s 0 v v v nil /\ R2 k s 0 v v v nil /\ R3 k s 0 v v v nil /\ 
+R4 k s 0 v v v nil /\ R5 k s 0 v v v nil /\ R6 k s 0 v v v nil /\ R7 k s 0 v v v nil /\ 
+R8 k s 0 v v v nil /\ R9 k s 0 v v v nil /\ R10 k s 0 v v v nil.
 Proof.
    intros.
    split.
@@ -5095,7 +5095,7 @@ length vu = nb_feature /\
 Proof.
    intros.
    destruct H as (k_stable, H).
-   generalize (R_init_Axp k v H).
+   generalize (R_init_Axp k s v H).
    intro HR.
    destruct HR as (HR0,HR).
    destruct HR as (HR1,HR).
@@ -6213,25 +6213,25 @@ Definition is_weak_CXp  (k : list T -> Tk) (v: list T) (p:list nat) : Prop :=
 /\ not (k(x)=k(v)).
 
 
-Definition R2_CXp  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R2_CXp  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   k vl <> k vu.
 
 
-Definition R6_CXp  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R6_CXp  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
    forall (j:nat),
    ((mem j p) -> ((get j vl = lambda j ) /\ (get j vu = nu j ))).
    
- Definition R7_CXp  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+ Definition R7_CXp  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
    forall (j:nat),
   (j>=i /\ j>=0 /\ i>=0 /\ j<nb_feature /\ i<nb_feature) -> ((get j vl = lambda j) /\ (get j vu = nu j)).
   
 
-Definition R9_CXp  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R9_CXp  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
   ( j<i /\ j>=0 /\ i>=0 /\ j<nb_feature /\ i<=nb_feature /\ not (mem j p)
   -> ((get j vl = get j v) /\ (get j vu = get j v))).
   
-Definition R10_CXp  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
+Definition R10_CXp  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (x:nat), forall (x0 x1 : list nat), 
   (p = x0++(x::x1)
 -> 
@@ -6655,12 +6655,12 @@ Qed.
 
 
 Lemma preserveR0Cas2_CXp : 
-   forall  (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R0 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R0 k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -6722,12 +6722,12 @@ Proof.
 Qed.
 
 Lemma preserveR1Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R1 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R1 k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -6867,12 +6867,12 @@ Qed.
 
 
 Lemma preserveR2Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R2_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R2_CXp k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7045,12 +7045,12 @@ destruct Ln as (Lnnvl,Lnnvu).
 Qed.
 
 Lemma preserveR3Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R3 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R3 k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7066,12 +7066,12 @@ Qed.
 
 
 Lemma preserveR5Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R5 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R5 k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7151,12 +7151,12 @@ apply varfix.
 Qed.
 
 Lemma preserveR6Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R6_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R6_CXp k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7284,12 +7284,12 @@ Qed.
 
 
 Lemma preserveR7Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R7_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R7_CXp k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7381,12 +7381,12 @@ Qed.
 
 
 Lemma preserveR8Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R8 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R8 k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7482,12 +7482,12 @@ Qed.
 
 
 Lemma preserveR9Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R9_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R9_CXp k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -7592,12 +7592,12 @@ Qed.
 
 
 Lemma preserveR10Cas2_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) = (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R10_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R10_CXp k s (i + 1) v
    (fst
      (freeAttr i (fst (fst (fixAttr i v vl vu p)))
         (snd (fst (fixAttr i v vl vu p)))))
@@ -8206,12 +8206,12 @@ Qed.
 
 
 Lemma preserveR0Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R0 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R0 k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p .
 Proof.
@@ -8260,12 +8260,12 @@ Proof.
 Qed.
 
 Lemma preserveR1Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R1 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R1 k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p .
 Proof.
@@ -8352,12 +8352,12 @@ Proof.
 Qed.
 
 Lemma preserveR2Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R2_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R2_CXp k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p .
 Proof.
@@ -8411,12 +8411,12 @@ auto.
 Qed.
 
 Lemma preserveR3Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R3 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R3 k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
    (snd (fst (fixAttr i v vl vu p))) p .
 Proof.
@@ -8428,12 +8428,12 @@ Qed.
 
 
 Lemma preserveR5Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat)(i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R5 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R5 k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p.
 Proof.
@@ -8458,12 +8458,12 @@ Proof.
 Qed.
 
 Lemma preserveR6Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R6_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R6_CXp k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p.
 Proof.
@@ -8544,12 +8544,12 @@ reflexivity.
 Qed.
 
 Lemma preserveR7Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R7_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R7_CXp k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p.
 Proof.
@@ -8629,12 +8629,12 @@ Qed.
 
 
 Lemma preserveR8Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R8 k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R8 k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p .
 Proof.
@@ -8658,12 +8658,12 @@ Qed.
 
 
 Lemma preserveR9Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R9_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R9_CXp k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p.
 Proof.
@@ -8740,12 +8740,12 @@ Qed.
 
 
 Lemma preserveR10Cas3_CXp : 
-   forall (k : list T -> Tk) (i:nat) (v vl vu: list T) (p:list nat),  
+   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
    i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu,np) :=  fixAttr i v vl vu p in (k nvl) <> (k nvu)) /\ 
-   (R0 k i v vl vu p /\ R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p  /\
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p) 
-   -> R10_CXp k (i + 1) v
+   (R0 k s i v vl vu p /\ R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p  /\
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p) 
+   -> R10_CXp k s (i + 1) v
    (fst (fst (fixAttr i v vl vu p)))
   (snd (fst (fixAttr i v vl vu p))) p.
 Proof.
@@ -8786,26 +8786,26 @@ length vu = nb_feature /\
 /\ (k vl) = (k vu)).
 
 
-Definition R_implies_E_CXp (k : list T -> Tk) (i:nat) : Prop :=
+Definition R_implies_E_CXp (k : list T -> Tk) (s : list nat) (i:nat) : Prop :=
   forall (v vl vu: list T) (p:list nat), 
-  (R0 k i v vl vu p /\
-   R1 k i v vl vu p /\ R2_CXp k i v vl vu p /\ R3 k i v vl vu p /\ 
-   R5 k i v vl vu p /\ R6_CXp k i v vl vu p /\ R7_CXp k i v vl vu p /\ R8 k i v vl vu p /\ 
-   R9_CXp k i v vl vu p /\ R10_CXp k i v vl vu p )
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2_CXp k s i v vl vu p /\ R3 k s i v vl vu p /\ 
+   R5 k s i v vl vu p /\ R6_CXp k s i v vl vu p /\ R7_CXp k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9_CXp k s i v vl vu p /\ R10_CXp k s i v vl vu p )
   -> (E1_CXp k i v vl vu p) /\ (E2_CXp k i v vl vu p) /\ (E3_CXp k i v vl vu p).
 
 
-Lemma ppost1_CXp :  forall (k : list T -> Tk) (v vl vu: list T) (p:list nat),
-R0 k nb_feature v vl vu p /\
-R1 k nb_feature v vl vu p /\
-R2_CXp k nb_feature v vl vu p /\
-R3 k nb_feature v vl vu p /\
-R5 k nb_feature v vl vu p /\
-R6_CXp k nb_feature v vl vu p /\
-R7_CXp k nb_feature v vl vu p /\
-R8 k nb_feature v vl vu p /\
-R9_CXp k nb_feature v vl vu p /\
-R10_CXp k nb_feature v vl vu p
+Lemma ppost1_CXp :  forall (k : list T -> Tk) (s : list nat) (v vl vu: list T) (p:list nat),
+R0 k s nb_feature v vl vu p /\
+R1 k s nb_feature v vl vu p /\
+R2_CXp k s nb_feature v vl vu p /\
+R3 k s nb_feature v vl vu p /\
+R5 k s nb_feature v vl vu p /\
+R6_CXp k s nb_feature v vl vu p /\
+R7_CXp k s nb_feature v vl vu p /\
+R8 k s nb_feature v vl vu p /\
+R9_CXp k s nb_feature v vl vu p /\
+R10_CXp k s nb_feature v vl vu p
 -> is_weak_CXp k v p.
 Proof.
  intros.
@@ -9045,9 +9045,9 @@ Qed.
 
 
 Lemma R_implies_E_findCXp : 
-forall (k : list T -> Tk)  (i:nat),  i>=0 /\ i < nb_feature +1 -> R_implies_E_CXp k i.
+forall (k : list T -> Tk) (s : list nat) (i:nat),  i>=0 /\ i < nb_feature +1 -> R_implies_E_CXp k s i.
 Proof.
-intro k.
+intros k s.
 apply (my_induction nb_feature).
 (* cas général *)
 split.
@@ -9184,7 +9184,7 @@ cut (nb_feature - nb_feature = 0).
 intro r.
 rewrite r.
 simpl.
-apply (ppost1_CXp k v vl vu p).
+apply (ppost1_CXp k s v vl vu p).
 auto.
 lia.
 (* post cond 2 *)
@@ -9223,7 +9223,7 @@ Definition is_CXp (k : list T -> Tk) (v: list T) (p:list nat) : Prop :=
 
 
 Lemma R_init_Cxp : 
-forall (k : list T -> Tk)  (v: list T), 
+forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (( length v = nb_feature
 /\ 
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
@@ -9231,16 +9231,16 @@ led (lambda j) (get j v) /\ led (get j v) (nu j)))
 /\ stable k
 /\ not_trivial k
 )
--> R0 k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R1 k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R2_CXp k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R3 k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R5 k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R6_CXp k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R7_CXp k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R8 k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R9_CXp k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
-/\ R10_CXp k 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil.
+-> R0 k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R1 k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R2_CXp k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R3 k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R5 k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R6_CXp k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R7_CXp k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R8 k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R9_CXp k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil
+/\ R10_CXp k s 0 v (feature_f nb_feature lambda) (feature_f nb_feature nu) nil.
 Proof.
    intros.
    destruct H as (H,Hp).
@@ -9482,7 +9482,7 @@ Qed.
 
 
 
-Lemma pre_post_findCXp : forall (k : list T -> Tk) (v: list T), 
+Lemma pre_post_findCXp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (
 length v = nb_feature
 /\ 
@@ -9505,7 +9505,7 @@ length nvu = nb_feature /\
 /\ (k nvl) = (k nvu)).
 Proof.
    intros.
-   generalize (R_init_Cxp k v H).
+   generalize (R_init_Cxp k s v H).
    destruct H as (H,Hp).
    destruct Hp as (k_stable, k_not_trivial).
    intro HR.
@@ -9525,7 +9525,7 @@ Proof.
    unfold E1_CXp.
    intros.
    unfold findCXp.
-   apply H0.
+   apply H0 with (s := s).
    lia.
    tauto.
    split.
@@ -9535,7 +9535,7 @@ Proof.
    unfold E2_CXp.
    intros.
    unfold findCXp.
-   apply H0.
+   apply H0 with (s := s).
    lia.
    tauto.
    (* post 3*)
@@ -9544,13 +9544,13 @@ Proof.
    unfold E3_CXp.
    intro.
    unfold findCXp.
-   apply H0.
+   apply H0 with (s := s).
    lia.
    tauto.
 Qed.
 
 
-Lemma weak_cxp_all : forall (k: list T -> Tk) (v :list T),
+Lemma weak_cxp_all : forall (k: list T -> Tk) (s : list nat) (v :list T),
 not_trivial k /\ stable k ->
 (
 length v = nb_feature
@@ -9561,6 +9561,7 @@ length v = nb_feature
 Proof.
    intros.
    apply pre_post_findCXp.
+   exact s.
    simpl.
    tauto.
 Qed.
@@ -9731,7 +9732,7 @@ Proof.
 Qed.
 
 
-Lemma cxp_inter : forall (k : list T -> Tk),
+Lemma cxp_inter : forall (k : list T -> Tk) (s : list nat),
 not_trivial k /\ stable k ->
 (
 forall (v : list T),
@@ -9754,7 +9755,7 @@ length vu = nb_feature /\
     ~ (mem j x1 \/ j > x) /\ get j vl = get j v /\ get j vu = get j v) /\
    k vl = k vu))).
 Proof.
-   intros k Pk.
+   intros k s Pk.
    destruct Pk as (k_not_trivial,k_stable).
    intros.
    split.
@@ -9765,6 +9766,7 @@ Proof.
    apply (sorted_middle_x1 x x0 x1).
    rewrite <- H0.
    apply pre_post_findCXp.
+   exact s.
    simpl.
    tauto.
    auto.
@@ -9776,11 +9778,12 @@ Proof.
    apply (sorted_middle_x0 x x0 x1).
    rewrite <- H0.
    apply pre_post_findCXp.
+   exact s.
    simpl.
    tauto.
    auto.
    (* exsits .... *)
-   generalize (pre_post_findCXp k v).
+   generalize (pre_post_findCXp k s v).
    intros.
    destruct H1.
    split.
@@ -9794,7 +9797,7 @@ Proof.
 Qed.
 
 
-Lemma minus_one_not_weak_CXp : forall (k : list T -> Tk) (v :list T),
+Lemma minus_one_not_weak_CXp : forall (k : list T -> Tk) (s : list nat) (v :list T),
 not_trivial k /\ stable k
 /\
 length v = nb_feature
@@ -10042,7 +10045,7 @@ intro.
       apply (not_mem_append x0 x1 x i).
       split.
       rewrite <- decomp_find.
-      apply (pre_post_findCXp k v).
+      apply (pre_post_findCXp k s v).
       split.
       split.
       apply Lv.
@@ -10082,7 +10085,7 @@ intro.
       apply (not_mem_append x0 x1 x i).
       split.
       rewrite <- decomp_find.
-      apply (pre_post_findCXp k v).
+      apply (pre_post_findCXp k s v).
       split.
       split.
       apply Lv.
@@ -10114,6 +10117,7 @@ destruct inter as (inf,inter).
 destruct inter as (sup,inter).
 apply inter.
 apply cxp_inter.
+exact s.
 split.
 apply k_not_trivial.
 apply k_stable.
@@ -10129,7 +10133,7 @@ unfold is_minus_one.
 auto.
 Qed.
 
-Theorem cxp_all : forall (k: list T -> Tk) (v:list T),
+Theorem cxp_all : forall (k: list T -> Tk) (s : list nat) (v:list T),
 not_trivial k /\ stable k ->
 (
 length v = nb_feature
@@ -10142,11 +10146,13 @@ Proof.
    unfold is_CXp.
    split.
    apply weak_cxp_all.
+   exact s.
    apply H.
    tauto.
    intro.
    apply (minus_one_implies_subset_CXp k v (findCXp k v)) .
    apply minus_one_not_weak_CXp.
+   exact s.
    tauto.
 Qed.
 
