@@ -1334,7 +1334,6 @@ match j with
 | S jmoins1 => 
   if mem_nat j s then findAXp_aux_j k s jmoins1 v vl vu p
   else
-   (* if j in S then return findAXp_aux_j k jmoins v vl vu p s *)
   let '(nvl,nvu) := freeAttr (nb_feature-j) vl vu in
     match Tk_eq_dec (k nvl) (k nvu) with
     | false => let '(nvl,nvu,np) := fixAttr (nb_feature-j) v nvl nvu p in
