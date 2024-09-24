@@ -1332,7 +1332,7 @@ list nat :=
 match j with
 | 0 => p 
 | S jmoins1 => 
-  if mem_nat j s then findAXp_aux_j k s jmoins1 v vl vu p
+  if mem_nat (nb_feature - j) s then findAXp_aux_j k s jmoins1 v vl vu p
   else
   let '(nvl,nvu) := freeAttr (nb_feature-j) vl vu in
     match Tk_eq_dec (k nvl) (k nvu) with
@@ -1345,7 +1345,7 @@ end.
 Lemma findAXp_aux_j_spec2 :
  forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
    j>0 
-/\ ~ mem j s
+/\ ~ mem (nb_feature - j) s
 /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) <> (k nvu))
 -> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in let '(nnvl,nnvu,np) := fixAttr (nb_feature-j) v nvl nvu p in findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v nnvl nnvu np.
 Proof.
@@ -1379,7 +1379,7 @@ rewrite (surjective_pairing (fst
 (fixAttr (nb_feature - S j) v
    (fst (freeAttr (nb_feature - S j) vl vu))
    (snd (freeAttr (nb_feature - S j) vl vu)) p))).
-destruct (mem_nat (S j) s) eqn:Heq.
+destruct (mem_nat (nb_feature - S j) s) eqn:Heq.
 apply mem_coherent in Heq.
 contradiction.
 simpl.
@@ -1395,7 +1395,7 @@ Qed.
 
 Lemma findAXp_aux_j_spec3 :
 forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
-j>0 /\ (~ mem j s) /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) = (k nvu))
+j>0 /\ (~ mem (nb_feature - j) s) /\ ( let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in (k nvl) = (k nvu))
 -> let '(nvl,nvu) :=  freeAttr (nb_feature-j) vl vu in findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v nvl nvu p.
 Proof.
 intros.
@@ -1414,7 +1414,7 @@ rewrite (surjective_pairing (freeAttr (nb_feature - S j) vl vu)).
  (k (snd (freeAttr (nb_feature - S j) vl vu))) = true).
 intro r2.
 rewrite r2.
-destruct (mem_nat (S j) s) eqn:Heq.
+destruct (mem_nat (nb_feature - S j) s) eqn:Heq.
 apply mem_coherent in Heq.
 contradiction.
 simpl.
@@ -1430,7 +1430,7 @@ Qed.
 
 Lemma findAXp_aux_j_spec4 :
 forall  (k : list T -> Tk) (s : list nat) (j:nat) (v vl vu: list T) (p:list nat),
-j>0 /\ mem j s
+j>0 /\ mem (nb_feature - j) s
 -> findAXp_aux_j k s j v vl vu p = findAXp_aux_j k s (j-1) v vl vu p.
 Proof.
 intros.
@@ -1454,7 +1454,7 @@ list nat := findAXp_aux_j k s (nb_feature-i) v vl vu p.
 
 Lemma findAXp_aux_spec2 : 
 forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
-i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s
+i>= 0 /\ i < nb_feature /\ ~ mem i s
 /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))
 -> let '(nvl,nvu) :=  freeAttr i vl vu in let '(nnvl,nnvu,np) := fixAttr i v nvl nvu p in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nnvl nnvu np.
 Proof.
@@ -1480,7 +1480,7 @@ apply findAXp_aux_j_spec2.
 split.
 lia.
 split.
-rewrite H2.
+rewrite <- ri.
 assumption.
 rewrite <- ri.
 exact H1.
@@ -1494,7 +1494,7 @@ Qed.
 
 Lemma findAXp_aux_spec3 : 
 forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
-i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s
+i>= 0 /\ i < nb_feature /\ ~ mem i s
 /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu))
 -> let '(nvl,nvu) :=  freeAttr i vl vu in findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v nvl nvu p.
 Proof.
@@ -1521,7 +1521,6 @@ split.
 lia.
 rewrite <- ri.
 split.
-rewrite H2.
 assumption.
 exact H1.
 (* egalité *)
@@ -1534,7 +1533,7 @@ Qed.
 
 Lemma findAXp_aux_spec4 :
 forall  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),
-i>= 0 /\ i < nb_feature /\ mem (nb_feature - i) s
+i>= 0 /\ i < nb_feature /\ mem i s
 -> findAXp_aux k s i v vl vu p = findAXp_aux k s (i+1) v vl vu p.
 Proof.
 intros.
@@ -1545,7 +1544,9 @@ apply findAXp_aux_j_spec4.
 intros.
 split.
 lia.
+replace (nb_feature - (nb_feature - i)) with (i).
 assumption.
+lia.
 lia.
 Qed.
 
@@ -4766,9 +4767,9 @@ unfold E3.
 (* couper selon les 4 cas du findAxp_aux *)
 (* TODO Quatrième cas ? *)
 cut ((i = nb_feature +1) 
-  \/ (i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))) 
-  \/ (i>= 0 /\ i < nb_feature /\ ~ mem (nb_feature - i) s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)))
-  \/ (i>= 0 /\ i < nb_feature /\ mem (nb_feature - i) s /\ True)).
+  \/ (i>= 0 /\ i < nb_feature /\ ~ mem i s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu))) 
+  \/ (i>= 0 /\ i < nb_feature /\ ~ mem i s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)))
+  \/ (i>= 0 /\ i < nb_feature /\ mem i s /\ True)).
 intro cases.
 destruct cases.
 (* cas terminal, pas possible *)
@@ -4935,7 +4936,7 @@ i < nb_feature /\
 intro r.
 destruct r.
 destruct H4.
-destruct (mem_not_mem (nb_feature - i) s).
+destruct (mem_not_mem i s).
 right.
 right.
 repeat (split; [assumption |]).
