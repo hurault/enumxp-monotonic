@@ -4989,37 +4989,88 @@ apply H.
 lia.
 Admitted.
 
+Fixpoint initVectors_aux (s : list nat) (j : nat) (vl vu : list T) :=
+   match j return list T * list T with
+   | 0 => (vl, vu)
+   | S j =>
+      if mem_nat (length s - S j) s then
+         let (vl', vu') := freeAttr (length s - S j) vl vu in
+         initVectors_aux s j vl' vu'
+      else
+         initVectors_aux s j vl vu
+   end.
+
+Definition initVectors (s : list nat) (v : list T) : list T * list T :=
+   initVectors_aux s (length v) v v.
+
+Lemma initVectorsSize (s : list nat) (v vl vu : list T) :
+   (vl, vu) = initVectors s v ->
+      length vl = length v /\ length vu = length v.
+Admitted.
+
+Lemma initVectorsCorrect (s : list nat) (v vl vu : list T) :
+   (vl, vu) = initVectors s v ->
+   forall (j : nat), j < length v ->
+      ( (mem j s -> get j vl = lambda j /\ get j vu = nu j)
+      /\ (~ mem j s -> get j vl = get j v /\ get j vu = get j v) ).
+Admitted.
+
 Program Definition findAXp (k : list T -> Tk) (s : list nat) (v: list T) : list nat :=
-  findAXp_aux k s 0 v v v nil.
+  let (vl, vu) := initVectors s v in
+  findAXp_aux k s 0 v vl vu nil.
 
 
-Lemma R_init_Axp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
+Lemma R_init_Axp : forall (k : list T -> Tk) (s : list nat) (v vl vu: list T), 
 (length v = nb_feature
 /\ 
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
 led (lambda j) (get j v) /\ led (get j v) (nu j))
+/\
+(vl, vu) = initVectors s v
 )
--> R0 k s 0 v v v nil /\ R1 k s 0 v v v nil /\ R2 k s 0 v v v nil /\ R3 k s 0 v v v nil /\ 
-R4 k s 0 v v v nil /\ R5 k s 0 v v v nil /\ R6 k s 0 v v v nil /\ R7 k s 0 v v v nil /\ 
-R8 k s 0 v v v nil /\ R9 k s 0 v v v nil /\ R10 k s 0 v v v nil.
+->
+R0 k s 0 v vl vu nil /\ R1 k s 0 v vl vu nil /\ R2 k s 0 v vl vu nil /\ R3 k s 0 v vl vu nil /\ 
+R4 k s 0 v vl vu nil /\ R5 k s 0 v vl vu nil /\ R6 k s 0 v vl vu nil /\ R7 k s 0 v vl vu nil /\ 
+R8 k s 0 v vl vu nil /\ R9 k s 0 v vl vu nil /\ R10 k s 0 v vl vu nil.
 Proof.
    intros.
+   destruct H as (H & H1 & H2).
+   assert (Hsize := initVectorsSize s v vl vu H2).
+   assert (Hvals := initVectorsCorrect s v vl vu H2).
    split.
    (* R0 *)
    unfold R0.
+   destruct Hsize.
+   rewrite <- H.
    tauto.
    split.
    (* R1 *)
-   destruct H.
    unfold R1.
    intros.
-   repeat split; [apply (H0 j H1)|apply (H0 j H1)|apply (H0 j)|apply (H0 j H1)|apply (H0 j H1)|apply (H0 j H1)].
-   apply H1.
+   rewrite -> H in Hvals.
+   specialize (H1 j H0).
+   specialize (Hvals j (proj2 H0)).
+   destruct Hvals.
+   assert (H5 := mem_not_mem j s).
+   repeat split; try tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj1 (H3 H5)); now apply led_eq.
+   rewrite (proj1 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj1 (H3 H5)); eapply led_transitivity, H1.
+   rewrite (proj1 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj2 (H3 H5)); eapply led_transitivity, H1.
+   rewrite (proj2 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj2 (H3 H5)); now apply led_eq.
+   rewrite (proj2 (H4 H5)); tauto.
    split.
    (* R2 *)
    unfold R2.
-   simpl.
-   auto.
+   admit. (* besoin d'hypothèse sur S *)
+   (* simpl. *)
+   (* auto. *)
    split.
    (* R3 *)
    unfold R3.
@@ -5028,11 +5079,17 @@ Proof.
    split.
    (* R4 *)
    unfold R4.
-   simpl.
+   intros.
+   destruct (j <? length v) eqn:H3.
+   specialize (Hvals j (proj1 (Nat.ltb_lt _ _) H3)).
+   destruct (mem_not_mem j s) as [H4 | H4];
+      try (left; tauto); try (right; tauto).
    right.
-   generalize H.
-   simpl.
-   tauto.
+   apply Nat.ltb_ge in H3.
+   assert (H4 : length vl <= j). { now rewrite (proj1 Hsize). }
+   assert (H5 : length vu <= j). { now rewrite (proj2 Hsize). }
+   eapply List.nth_overflow in H3, H4, H5.
+   unfold get; now rewrite H3, H4, H5.
    split.
    (* R5 *)
    unfold R5.
@@ -5056,8 +5113,9 @@ Proof.
    split.
    (* R9 *)
    unfold R9.
-   simpl.
-   tauto.
+   admit. (* mettre à jour R9 *)
+   (* simpl. *)
+   (* tauto. *)
    (* R10 *)
    unfold R10.
    simpl.
@@ -5069,7 +5127,7 @@ Proof.
    auto.
    apply (list_mem_not_nil x (x0 ++ x :: x1)).
    apply list_mem_middle.
-Qed.
+Admitted.
 
 Lemma pre_post_findAXp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (
@@ -5095,7 +5153,12 @@ length vu = nb_feature /\
 Proof.
    intros.
    destruct H as (k_stable, H).
-   generalize (R_init_Axp k s v H).
+   remember (initVectors s v) as p.
+   remember (fst p) as vl.
+   remember (snd p) as vu.
+   assert (Hpre := R_init_Axp k s v vl vu).
+   replace p with (vl, vu) in Heqp; [| destruct p; now subst ].
+   lapply Hpre; [| tauto ].
    intro HR.
    destruct HR as (HR0,HR).
    destruct HR as (HR1,HR).
@@ -5114,6 +5177,7 @@ Proof.
    unfold E1.
    intros.
    unfold findAXp.
+   rewrite <- Heqp.
    apply H0.
    apply k_stable.
    lia.
@@ -5125,6 +5189,7 @@ Proof.
    unfold E2.
    intros.
    unfold findAXp.
+   rewrite <- Heqp.
    apply H0.
    apply k_stable.
    lia.
@@ -5135,6 +5200,7 @@ Proof.
    unfold E3.
    intro.
    unfold findAXp.
+   rewrite <- Heqp.
    apply H0.
    apply k_stable.
    lia.
