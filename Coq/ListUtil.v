@@ -1,4 +1,4 @@
-Require Import Arith Lia Init.Datatypes.
+Require Import Arith Lia Init.Datatypes List.
 
 Open Scope list_scope.
 
@@ -125,4 +125,66 @@ simpl.
 intro I.
 injection I.
 auto.
+Qed.
+
+
+Fixpoint diff (l1 l2 : list nat) : list nat :=
+  match l1 with
+  | nil => nil
+  | x :: l1' =>
+    if mem_nat x l2 then diff l1' l2
+    else x :: diff l1' l2
+  end.
+
+Theorem diff_correct (l1 l2 : list nat) :
+  forall j, mem j (diff l1 l2) <-> mem j l1 /\ ~ mem j l2.
+Proof.
+  intros j. split; intros H.
+  - (* -> *)
+    induction l1 as [| x l1' IH ].
+    + inversion H.
+    + destruct (mem_nat x l2) eqn:Hmem.
+      * simpl in H; rewrite Hmem in H.
+        split; [right|]; tauto.
+      * simpl in H; rewrite Hmem in H.
+        inversion H.
+        split. left; tauto.
+        intros absurd; apply mem_coherent in absurd. 
+        rewrite H0 in absurd. rewrite absurd in Hmem. discriminate.
+        split; [right|]; tauto.
+  - (* <- *)
+    destruct H as (H1 & H2).
+    induction l1 as [| x l1' IH ].
+    + inversion H1.
+    + assert (H3 : mem_nat j l2 = false).
+      { cut (mem_nat j l2 <> true). destruct (mem_nat j l2); tauto.
+      intros absurd. apply mem_coherent in absurd; contradiction. }
+      inversion H1.
+      * subst. simpl. rewrite H3.
+        now left.
+      * simpl. destruct (mem_nat x l2).
+        tauto. right; tauto.
+Qed.
+
+
+Fixpoint init (n : nat) :=
+  match n with
+  | 0 => nil
+  | S n => n :: init n
+  end.
+
+Theorem init_correct (n : nat) :
+  forall (p : nat), mem p (init n) <-> p < n.
+Proof.
+  intros p. split; intros H.
+  - (* -> *)
+    induction n.
+    + inversion H.
+    + inversion H.
+      * rewrite H0. apply le_n.
+      * apply le_S, IHn, H0.
+  - (* <- *)
+    induction H.
+    + now left.
+    + right. assumption.
 Qed.
