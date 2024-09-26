@@ -5015,14 +5015,47 @@ Lemma initVectorsCorrect (s : list nat) (v vl vu : list T) :
       /\ (~ mem j s -> get j vl = get j v /\ get j vu = get j v) ).
 Admitted.
 
+Lemma initVectorsBounds (s : list nat) (v vl vu : list T) :
+   (vl, vu) = initVectors s v ->
+   is_bounded v ->
+   forall (j : nat), j < length v ->
+      led (lambda j) (get j vl) /\ led (get j vl) (nu j)
+      /\ led (lambda j) (get j vu) /\ led (get j vu) (nu j).
+Proof.
+   intros H Hv j Hj.
+   assert (Hvals := initVectorsCorrect s v vl vu H j Hj).
+   destruct Hvals as (H3 & H4).
+   specialize (Hv j).
+   lapply Hv; [ intros Hv' | split; try auto; try apply Nat.le_0_l ].
+   assert (H5 := mem_not_mem j s).
+   repeat split; try tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj1 (H3 H5)); now apply led_eq.
+   rewrite (proj1 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj1 (H3 H5)); eapply led_transitivity, Hv'.
+   rewrite (proj1 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj2 (H3 H5)); eapply led_transitivity, Hv'.
+   rewrite (proj2 (H4 H5)); tauto.
+   destruct H5 as [H5 | H5].
+   rewrite (proj2 (H3 H5)); now apply led_eq.
+   rewrite (proj2 (H4 H5)); tauto.
+Qed.
+
+
 Program Definition findAXp (k : list T -> Tk) (s : list nat) (v: list T) : list nat :=
   let (vl, vu) := initVectors s v in
   findAXp_aux k s 0 v vl vu nil.
 
 
 Lemma R_init_Axp : forall (k : list T -> Tk) (s : list nat) (v vl vu: list T), 
-(length v = nb_feature
+(stable k
+/\
+length v = nb_feature
 /\ 
+k vl = k vu
+/\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
 led (lambda j) (get j v) /\ led (get j v) (nu j))
 /\
@@ -5034,42 +5067,52 @@ R4 k s 0 v vl vu nil /\ R5 k s 0 v vl vu nil /\ R6 k s 0 v vl vu nil /\ R7 k s 0
 R8 k s 0 v vl vu nil /\ R9 k s 0 v vl vu nil /\ R10 k s 0 v vl vu nil.
 Proof.
    intros.
-   destruct H as (H & H1 & H2).
+   destruct H as (Hstable & H & Hseed & H1 & H2).
    assert (Hsize := initVectorsSize s v vl vu H2).
    assert (Hvals := initVectorsCorrect s v vl vu H2).
-   split.
+   assert (Hbounds' := initVectorsBounds s v vl vu H2).
+   lapply Hbounds'; [| unfold is_bounded; rewrite H; exact H1 ];
+   intros Hbounds; clear Hbounds'.
    (* R0 *)
+   assert (HR0 : R0 k s 0 v vl vu nil). (* for later reuse *)
+   {
    unfold R0.
    destruct Hsize.
    rewrite <- H.
    tauto.
+   }
    split.
+   exact HR0.
    (* R1 *)
+   assert (HR1 : R1 k s 0 v vl vu nil). (* for later reuse *)
+   {
    unfold R1.
    intros.
-   rewrite -> H in Hvals.
-   specialize (H1 j H0).
-   specialize (Hvals j (proj2 H0)).
-   destruct Hvals.
-   assert (H5 := mem_not_mem j s).
-   repeat split; try tauto.
-   destruct H5 as [H5 | H5].
-   rewrite (proj1 (H3 H5)); now apply led_eq.
-   rewrite (proj1 (H4 H5)); tauto.
-   destruct H5 as [H5 | H5].
-   rewrite (proj1 (H3 H5)); eapply led_transitivity, H1.
-   rewrite (proj1 (H4 H5)); tauto.
-   destruct H5 as [H5 | H5].
-   rewrite (proj2 (H3 H5)); eapply led_transitivity, H1.
-   rewrite (proj2 (H4 H5)); tauto.
-   destruct H5 as [H5 | H5].
-   rewrite (proj2 (H3 H5)); now apply led_eq.
-   rewrite (proj2 (H4 H5)); tauto.
+   rewrite H in Hbounds.
+   repeat split; try (eapply H1; tauto); try (eapply Hbounds; tauto).
+   }
+   split.
+   exact HR1.
    split.
    (* R2 *)
    unfold R2.
-   admit. (* besoin d'hypothèse sur S *)
-   (* simpl. *)
+   split; [ exact Hseed |].
+   apply Hstable with (f2 := vu).
+   rewrite H in *.
+   repeat split; try (apply HR0; tauto); try (eapply HR1; tauto).
+   intros i (_ & Hi).
+   destruct (mem_not_mem i s).
+   rewrite (proj1 (proj1 (Hvals i Hi) H0)).
+   eapply H1. split; try lia; try tauto.
+   rewrite (proj1 (proj2 (Hvals i Hi) H0)).
+   now apply led_eq.
+   intros i (_ & Hi).
+   destruct (mem_not_mem i s).
+   rewrite (proj2 (proj1 (Hvals i Hi) H0)).
+   eapply H1. split; try lia; try tauto.
+   rewrite (proj2 (proj2 (Hvals i Hi) H0)).
+   now apply led_eq.
+   exact Hseed.
    (* auto. *)
    split.
    (* R3 *)
@@ -5134,6 +5177,8 @@ Lemma pre_post_findAXp : forall (k : list T -> Tk) (s : list nat) (v: list T),
 stable k
 /\
 length v = nb_feature
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
 /\ 
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
 led (lambda j) (get j v) /\ led (get j v) (nu j))
@@ -5156,9 +5201,14 @@ Proof.
    remember (initVectors s v) as p.
    remember (fst p) as vl.
    remember (snd p) as vu.
-   assert (Hpre := R_init_Axp k s v vl vu).
    replace p with (vl, vu) in Heqp; [| destruct p; now subst ].
-   lapply Hpre; [| tauto ].
+   assert (Hpre := R_init_Axp k s v vl vu).
+   assert (Hvals := initVectorsCorrect s v vl vu Heqp).
+   assert (Hsize := initVectorsSize s v vl vu Heqp).
+   assert (Hbounds' := initVectorsBounds s v vl vu Heqp).
+   lapply Hbounds'; [| unfold is_bounded; rewrite (proj1 H); exact (proj2 (proj2 H)) ];
+   intros Hbounds; clear Hbounds'.
+   lapply Hpre.
    intro HR.
    destruct HR as (HR0,HR).
    destruct HR as (HR1,HR).
@@ -5205,6 +5255,33 @@ Proof.
    apply k_stable.
    lia.
    tauto.
+   (* hypothèses pour appliquer Hpre *)
+   clear Hpre.
+   destruct H as (Hvlength & HAXp & Hboundsv).
+   repeat split; try auto; try (eapply Hboundsv; auto).
+   unfold is_weak_AXp in HAXp.
+   cut (k vl = k v /\ k vu = k v).
+   intros (H1 & H2). now rewrite H1, <- H2.
+   rewrite Hvlength in *.
+   split; apply HAXp.
+   repeat split; try tauto; try (eapply Hbounds; tauto).
+   intros j (_ & Hj). destruct (mem_nat j s) eqn:Hmemjs.
+   right. intros C. apply diff_correct in C as (_ & Hjs).
+   apply mem_coherent in Hmemjs. contradiction.
+   left. destruct (mem_not_mem j s) as [Hjs | Hjs];
+   [ apply mem_coherent in Hjs; rewrite Hjs in Hmemjs; discriminate |].
+   split. apply diff_correct. split; try auto.
+   apply init_correct; assumption.
+   eapply Hvals; tauto.
+   repeat split; try tauto; try (eapply Hbounds; tauto).
+   intros j (_ & Hj). destruct (mem_nat j s) eqn:Hmemjs.
+   right. intros C. apply diff_correct in C as (_ & Hjs).
+   apply mem_coherent in Hmemjs. contradiction.
+   left. destruct (mem_not_mem j s) as [Hjs | Hjs];
+   [ apply mem_coherent in Hjs; rewrite Hjs in Hmemjs; discriminate |].
+   split. apply diff_correct. split; try auto.
+   apply init_correct; assumption.
+   eapply Hvals; tauto.
 Qed.
 
  Fixpoint is_set {a:Type} (l:list a) : Prop :=
@@ -5675,6 +5752,8 @@ stable k
 /\
 length v = nb_feature
 /\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
 -> is_weak_AXp k v (findAXp k s v).
@@ -5692,6 +5771,8 @@ stable k
 /\
 length v = nb_feature
 /\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
 /\  findAXp k s v =x0++(x::x1) -> 
@@ -5699,7 +5780,7 @@ length v = nb_feature
 Proof.
    intros.
    destruct H as (k_stable, H).
-   destruct H.
+   destruct H as (HAXp & H & H1).
    destruct H1.
    cut (x<e).
    lia.
@@ -5716,6 +5797,8 @@ stable k
 -> (
 forall (v : list T),
 length v = nb_feature
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
@@ -5775,6 +5858,8 @@ stable k
 /\
 length v = nb_feature
 /\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
 -> forall (q:list nat), (is_minus_one q (findAXp k s v)) -> not (is_weak_AXp k v q).
@@ -5793,7 +5878,9 @@ Pour les deux si i dans q , i dans x1 -> val de v ou i dans x0 -> val de v (car 
 mais comme ils sont différents, forcément un des deux qui ne vaut pas la même chose de k v.
 *)
 intros.
-destruct H as (k_stable,H).
+destruct H as (k_stable,H').
+assert (H := conj (proj1 H') (proj2 (proj2 H'))).
+destruct H' as (_ & H' & _).
 cut (exists (x:nat) (x0 x1 :list nat),
   (findAXp k s v = (x0++(x::x1))) /\ (q = x0++x1)).
 intros.
@@ -5873,6 +5960,8 @@ apply k_stable.
 split.
 apply Lv.
 split.
+apply H'.
+split.
 apply H.
 apply decomp_find.
 apply H4.
@@ -5941,6 +6030,8 @@ apply k_stable.
 split.
 apply Lv.
 split.
+apply H'.
+split.
 apply H.
 apply decomp_find.
 apply H4.
@@ -5981,6 +6072,8 @@ eapply axp_inter.
 apply k_stable.
 split.
 apply Lv.
+split.
+apply H'.
 apply H.
 apply decomp_find.
 
@@ -5994,6 +6087,8 @@ Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
 stable k
 -> (
 length v = nb_feature
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
