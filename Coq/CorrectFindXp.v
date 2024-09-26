@@ -5006,7 +5006,30 @@ Definition initVectors (s : list nat) (v : list T) : list T * list T :=
 Lemma initVectorsSize (s : list nat) (v vl vu : list T) :
    (vl, vu) = initVectors s v ->
       length vl = length v /\ length vu = length v.
-Admitted.
+Proof.
+   assert (Lem : forall j s vl vu vl' vu',
+            (vl', vu') = initVectors_aux s j vl vu ->
+            length vl = length vu ->
+            length vl' = length vl /\ length vu' = length vu).
+   { 
+      intros j s'. induction j; intros.
+      - inversion H. now split.
+      - simpl in H.
+        destruct (freeAttr (length s' - S j)) as (vl'', vu'') eqn:Heq'.
+        assert (H1 : length vl'' = length vl0 /\ length vu'' = length vu0).
+        { rewrite H0.
+          replace vl'' with (fst (freeAttr (length s' - S j) vl0 vu0)).
+          replace vu'' with (snd (freeAttr (length s' - S j) vl0 vu0)).
+          apply free_size. now split. now rewrite Heq'. now rewrite Heq'. }
+        destruct (mem_nat (length s' - S j)).
+        + destruct H1 as (H1 & H2); rewrite <- H1, <- H2.
+          apply IHj. assumption. now rewrite H1, H2.
+        + apply IHj. assumption. assumption.
+   }
+
+   unfold initVectors. intros H. eapply Lem.
+   apply H. reflexivity.
+Qed.
 
 Lemma initVectorsCorrect (s : list nat) (v vl vu : list T) :
    (vl, vu) = initVectors s v ->
