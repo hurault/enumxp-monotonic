@@ -4989,12 +4989,13 @@ apply H.
 lia.
 Admitted.
 
+
 Fixpoint initVectors_aux (s : list nat) (j : nat) (vl vu : list T) :=
    match j return list T * list T with
    | 0 => (vl, vu)
    | S j =>
-      if mem_nat (length s - S j) s then
-         let (vl', vu') := freeAttr (length s - S j) vl vu in
+      if mem_nat (length vl - S j) s then
+         let (vl', vu') := freeAttr (length vl - S j) vl vu in
          initVectors_aux s j vl' vu'
       else
          initVectors_aux s j vl vu
@@ -5003,32 +5004,129 @@ Fixpoint initVectors_aux (s : list nat) (j : nat) (vl vu : list T) :=
 Definition initVectors (s : list nat) (v : list T) : list T * list T :=
    initVectors_aux s (length v) v v.
 
+
+Lemma initVectorsSize_aux (j : nat) (s : list nat) :
+   forall (vl vu vl' vu' : list T),
+      (vl', vu') = initVectors_aux s j vl vu ->
+      length vl = length vu ->
+      length vl' = length vl /\ length vu' = length vu.
+Proof.
+   induction j; intros.
+   - inversion H. now split.
+   - simpl in H.
+      destruct (freeAttr (length vl - S j)) as (vl'', vu'') eqn:Heq'.
+      assert (H1 : length vl'' = length vl /\ length vu'' = length vu).
+      { 
+         rewrite H0.
+         replace vl'' with (fst (freeAttr (length vl - S j) vl vu)).
+         replace vu'' with (snd (freeAttr (length vl - S j) vl vu)).
+         apply free_size. now split. now rewrite Heq'. now rewrite Heq'.
+      }
+      destruct (mem_nat (length vl - S j)).
+      + destruct H1 as (H1 & H2); rewrite <- H1, <- H2.
+         apply IHj. assumption. now rewrite H1, H2.
+      + apply IHj. assumption. assumption.
+Qed.
+
 Lemma initVectorsSize (s : list nat) (v vl vu : list T) :
    (vl, vu) = initVectors s v ->
       length vl = length v /\ length vu = length v.
 Proof.
-   assert (Lem : forall j s vl vu vl' vu',
-            (vl', vu') = initVectors_aux s j vl vu ->
-            length vl = length vu ->
-            length vl' = length vl /\ length vu' = length vu).
-   { 
-      intros j s'. induction j; intros.
-      - inversion H. now split.
-      - simpl in H.
-        destruct (freeAttr (length s' - S j)) as (vl'', vu'') eqn:Heq'.
-        assert (H1 : length vl'' = length vl0 /\ length vu'' = length vu0).
-        { rewrite H0.
-          replace vl'' with (fst (freeAttr (length s' - S j) vl0 vu0)).
-          replace vu'' with (snd (freeAttr (length s' - S j) vl0 vu0)).
-          apply free_size. now split. now rewrite Heq'. now rewrite Heq'. }
-        destruct (mem_nat (length s' - S j)).
-        + destruct H1 as (H1 & H2); rewrite <- H1, <- H2.
-          apply IHj. assumption. now rewrite H1, H2.
-        + apply IHj. assumption. assumption.
-   }
-
-   unfold initVectors. intros H. eapply Lem.
+   unfold initVectors. intros H. eapply initVectorsSize_aux.
    apply H. reflexivity.
+Qed.
+
+Lemma initVectorsCorrect_aux (j : nat) (s : list nat) :
+   forall (vl vu vl' vu' : list T) (i : nat),
+      (vl', vu') = initVectors_aux s j vl vu ->
+      length vl = length vu ->
+      j <= length vl ->
+      i < length vl ->
+      (mem i s /\ length vl - j <= i -> get i vl' = lambda i /\ get i vu' = nu i)
+      /\ (~ mem i s \/ i < length vl - j -> get i vl' = get i vl /\ get i vu' = get i vu).
+Proof.
+   induction j; intros.
+   - split.
+      + intros (_ & absurd). lia.
+      + intros _. inversion H. now split.
+
+   - inversion H.
+      assert (Hsize' := initVectorsSize_aux _ _ _ _ _ _ H H0).
+      destruct Hsize' as (Hsize1' & Hsize2').
+      destruct (mem_nat (length vl - S j)) eqn:Hmem.
+
+      + (* freeAttr (len s - S j) *)
+         destruct (freeAttr (length vl - S j) vl vu) as (vl'', vu'') eqn:Heq''.
+         eassert (Hsize'' := free_size (length vu) _ _ _ (conj H0 eq_refl)).
+         destruct Hsize'' as (Hsize1'' & Hsize2'').
+         rewrite Heq'' in Hsize1'', Hsize2''.
+         simpl in Hsize1'', Hsize2''.
+         rewrite <- H0 in Hsize1''.
+         assert (Hsize''' := initVectorsSize_aux j s _ _ _ _ H4).
+         lapply Hsize'''; [ clear Hsize'''; intros Hsize''' | now rewrite Hsize1'', Hsize2'' ].
+         destruct Hsize''' as (Hsize1''' & Hsize2''').
+         specialize (IHj _ _ _ _ i H4).
+         do 3 (lapply IHj; [ clear IHj; intros IHj | lia ]).
+         destruct IHj as (IHj1 & IHj2).
+
+         cut (i < length vl - S j \/ i = length vl - S j \/ length vl - S j < i); [| lia ].
+         intros [ Hlti | [ Heqi | Hgei ] ].
+         * (* i < length vl - S j *)
+            split; [ intros; lia | intros ].
+            eassert (Hval := free_get _ _ i vl vu _ _).
+            lapply Hval; [ clear Hval; intros Hval | repeat split; [| | | | | exact Heq'' |]; try lia ].
+            cut (~ mem i s \/ i < length vl - j); [ intros H6 | lia ].
+            rewrite <- Hsize1'' in H6; specialize (IHj2 H6).
+            destruct IHj2; destruct Hval.
+            now rewrite H5, H7, H8, H9.
+
+         * (* i = length vl - S j *)
+            rewrite <- Heqi in Heq'', Hmem.
+            split; [ intros _ | intros [ absurd | absurd ] ].
+            lapply IHj2; [ clear IHj2; intros IHj2 | right; lia ].
+            eassert (Hval := free_i _ i vl vu _ _).
+            lapply Hval; [ clear Hval; intros Hval | repeat split; [| | | exact Heq'' |]; try lia ].
+            destruct IHj2; destruct Hval. now rewrite H3, H5, H6, H7.
+            apply mem_coherent in Hmem; contradiction.
+            lia.
+
+         * (* length vl - S j < i *)
+            apply mem_coherent in Hmem.
+            split; [ intros (H5 & H6) | intros [ H5 | absurd ]; [| lia ] ].
+            apply IHj1. split; [ assumption | lia ].
+            eassert (Hval := free_get _ _ i vl vu _ _).
+            lapply Hval; [ clear Hval; intros Hval | repeat split; [| | | | | exact Heq'' |]; try lia ].
+            lapply IHj2; [ clear IHj2; intros IHj2 | left; assumption ].
+            destruct IHj2; destruct Hval. now rewrite H3, H6, H7, H8.
+
+      + (* pass *)
+         specialize (IHj _ _ _ _ i H4).
+         do 3 (lapply IHj; [ clear IHj; intros IHj | lia ]).
+         destruct IHj as (IHj1 & IHj2).
+         
+         cut (i < length vl - S j \/ i = length vl - S j \/ length vl - S j < i); [| lia ].
+         intros [ Hlti | [ Heqi | Hgei ] ].
+         * (* i < length vl - S j *)
+            split; [ intros; lia | intros ].
+            lapply IHj2; [ clear IHj2; intros IHj2 | lia ].
+            apply IHj2.
+
+         * (* i = length vl - S j *)
+            rewrite <- Heqi in Hmem.
+            destruct (mem_not_mem i s) as [ absurd |].
+            apply mem_coherent in absurd; rewrite absurd in Hmem; discriminate.
+            split; [ intros (absurd & _) | intros _ ]. contradiction.
+            lapply IHj2; [ clear IHj2; intros IHj2 | left; assumption ].
+            apply IHj2.
+
+         * (* length vl - S j < i *)
+            destruct (mem_not_mem i s) as [ Hmemi | Hmemi ].
+            lapply IHj1; [ clear IHj1; intros IHj1 | split; [ assumption | lia ] ].
+            split. intros _; apply IHj1.
+            intros [ absurd | absurd ]. contradiction. lia.
+            lapply IHj2; [ clear IHj2; intros IHj2 | left; assumption ].
+            split. intros (absurd & _); contradiction.
+            intros _. apply IHj2.
 Qed.
 
 Lemma initVectorsCorrect (s : list nat) (v vl vu : list T) :
@@ -5036,7 +5134,14 @@ Lemma initVectorsCorrect (s : list nat) (v vl vu : list T) :
    forall (j : nat), j < length v ->
       ( (mem j s -> get j vl = lambda j /\ get j vu = nu j)
       /\ (~ mem j s -> get j vl = get j v /\ get j vu = get j v) ).
-Admitted.
+Proof.
+   unfold initVectors. intros H. intros.
+   assert (Haux := initVectorsCorrect_aux _ _ _ _ _ _ j H).
+   do 3 (lapply Haux; [ clear Haux; intros Haux | try lia ]).
+   destruct (mem_not_mem j s); split; intros; try contradiction.
+   apply Haux. split; [ assumption | lia ].
+   apply Haux. left; assumption.
+Qed.
 
 Lemma initVectorsBounds (s : list nat) (v vl vu : list T) :
    (vl, vu) = initVectors s v ->
