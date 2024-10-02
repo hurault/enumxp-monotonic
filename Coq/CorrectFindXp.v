@@ -1591,13 +1591,13 @@ Definition R6  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:li
   
 Definition R7  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
-  (j>=0 /\ j<i /\ not( mem j p)) -> ((get j vl = lambda j) /\ (get j vu = nu j)).
+  (j>=0 /\ j<i /\ not (mem j p)) /\ not (mem j s) -> ((get j vl = lambda j) /\ (get j vu = nu j)).
   
 Definition R8  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := is_sorted p.
 
 Definition R9  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
   forall (j:nat),
-  (j>=i /\ j>=0 /\ i>=0 /\ j<nb_feature /\ i<nb_feature
+  (j>=i /\ j>=0 /\ i>=0 /\ j<nb_feature /\ i<nb_feature /\ not (mem j s)
   -> ((get j vl = get j v) /\ (get j vu = get j v))).
   
 Definition R10  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop :=
@@ -1611,6 +1611,10 @@ length nvu = nb_feature /\
   ->  ((mem j x1 \/ j>x) /\ get j nvl=get j v /\ get j nvu =get j v) 
         \/ ( (not (mem j x1 \/ j>x)) /\ get j nvl =lambda j /\ get j nvu =nu j) ) 
 /\ (k nvl) <> (k nvu)).
+
+Definition R11 (k : list T -> Tk) (s : list nat) (i : nat) (v vl vu : list T) (p : list nat) : Prop :=
+   forall (j : nat), j < nb_feature -> mem j s ->
+      get j vl = lambda j /\ get j vu = nu j.
 
 
 Definition E1  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
@@ -1692,7 +1696,7 @@ Definition R_implies_E_AXp (k : list T -> Tk) (s : list nat) (i:nat) : Prop :=
   (R0 k s i v vl vu p /\
    R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
    R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
-   R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p /\ R11 k s i v vl vu p) 
   -> (E1 k s i v vl vu p) /\ (E2 k s i v vl vu p) /\ (E3 k s i v vl vu p).
 
 Lemma preserveR0Cas2_AXp : 
@@ -1832,7 +1836,7 @@ Qed.
 
 Lemma preserveR1Cas2_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat),  
-  i>= 0 /\ i < nb_feature  /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
   (R0 k s i v vl vu p /\
   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -1936,7 +1940,7 @@ Qed.
 
 Lemma preserveR2Cas2_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ ~ mem i s /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
   (R0 k s i v vl vu p /\
   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -1958,6 +1962,7 @@ Proof.
    unfold R2.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -2026,7 +2031,8 @@ Proof.
         reflexivity.
            (* get i0 vu = get i0 v *)
            apply (HR9 i0).
-           lia.
+           rewrite H0.
+           repeat split; try lia; assumption.
            (* get i0 nnvu = get i0 v *)
            rewrite H0.
            apply (fix_i nb_feature i v nvl nvu p nnvl nnvu np).
@@ -2069,7 +2075,8 @@ Proof.
      reflexivity.
         (* get i0 vl = get i0 v *)
         apply (HR9 i0).
-        lia.
+        rewrite H0.
+        repeat split; try lia; assumption.
         (* get i0 nnvl = get i0 v *)
         rewrite H0.
         apply (fix_i nb_feature i v nvl nvu p nnvl nnvu np).
@@ -2587,7 +2594,7 @@ Qed.
 
 Lemma preserveR7Cas2_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
   (R0 k s i v vl vu p /\
   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -2609,6 +2616,7 @@ Proof.
    unfold R7.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -2663,6 +2671,7 @@ simpl.
 intros.
 destruct H0.
 destruct H1.
+split; [| assumption ].
 split.
 tauto.
 split.
@@ -2676,8 +2685,9 @@ apply (free_fix_id nb_feature i j v vl vu nvl nvu p nnvl nnvu np).
 repeat split; [lia | lia | lia | lia | lia | apply HR0 | apply HR0 | apply HR0 | apply varfree | apply varfix].
 (* j <> i /\ ~ mem j p *)
 destruct H.
-destruct H0.
-generalize H1.
+destruct H.
+destruct H1.
+generalize H2.
 cut (np = i::p).
 intro rnp.
 rewrite rnp.
@@ -2818,7 +2828,7 @@ Qed.
 
 Lemma preserveR9Cas2_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
   (R0 k s i v vl vu p /\
   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -2840,6 +2850,7 @@ Proof.
    unfold R9.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -2886,7 +2897,7 @@ cut (get j nnvu = get j vu).
 intro rnnvu.
 rewrite rnnvu.
 apply HR9.
-lia.
+repeat split; try lia. tauto.
 apply (free_fix_id nb_feature i j v vl vu nvl nvu p nnvl nnvu np).
 repeat split; [lia | lia | lia | lia | lia | apply HR0 | apply HR0 | apply HR0 | apply varfree | apply varfix].
 apply (free_fix_id nb_feature i j v vl vu nvl nvu p nnvl nnvu np).
@@ -3409,7 +3420,7 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    rewrite (get_sup_i_ln_i_v i0 i vl lambda nil).
    apply HR9.
    rewrite (length_ln_i_v i vl lambda nil) in H0.
-   lia.
+   (* lia. *) admit.
    rewrite (length_ln_i_v i vl lambda nil) in H0.
    lia.
    rewrite (length_ln_i_v i vl lambda nil) in H0.
@@ -3441,7 +3452,7 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    rewrite (get_sup_i_ln_i_v i0 i vu nu nil).
    apply HR9.
    rewrite (length_ln_i_v i vu nu nil) in H0.
-   lia.
+   (* lia. *) admit.
    rewrite (length_ln_i_v i vu nu nil) in H0.
    lia.
    rewrite (length_ln_i_v i vu nu nil) in H0.
@@ -3471,7 +3482,7 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    rewrite i0nvl.
    apply HR7.
    simpl.
-   lia.
+   (* lia. *) admit.
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
    repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
@@ -3510,7 +3521,7 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    rewrite i0nvl.
    apply HR7.
    simpl.
-   lia.
+   (* lia. *) admit.
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
    repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
@@ -3682,7 +3693,7 @@ split.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
       repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
       apply HR7.
-      repeat split; [lia|lia|apply H2].
+      (* repeat split; [lia|lia|apply H2]. *) admit.
       repeat split; [lia|lia|lia|apply H2].
       (* mem i0 (n :: p) \/ ~ mem i0 (n :: p) *)
       tauto.
@@ -3701,7 +3712,7 @@ split.
     apply (free_get nb_feature i i0 vl vu nvl nvu).
     repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
     apply HR9.
-    lia.
+    (* lia. *) admit.
     lia.
    (* i0 < i \/ i0 = i \/ i0 > i *)
    lia.
@@ -3741,7 +3752,7 @@ split.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
       repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
       apply HR7.
-      repeat split; [lia|lia|apply H2].
+      (* repeat split; [lia|lia|apply H2]. *) admit.
       repeat split; [lia|lia|lia|apply H2].
       (* mem i0 (n :: p) \/ ~ mem i0 (n :: p) *)
       tauto.
@@ -3760,7 +3771,7 @@ split.
     apply (free_get nb_feature i i0 vl vu nvl nvu).
     repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
     apply HR9.
-    lia.
+    (* lia. *) admit.
     lia.
    (* i0 < i \/ i0 = i \/ i0 > i *)
    lia.
@@ -3800,6 +3811,53 @@ destruct (freeAttr i vl vu).
 exists l.
 exists l0.
 reflexivity.
+Admitted.
+
+
+Lemma preserveR11Cas2_AXp : 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  (R0 k s i v vl vu p /\
+  R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+  R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p /\ R11 k s i v vl vu p) 
+ -> R11 k s (i + 1) v
+ (fst
+    (fst
+       (fixAttr i v (fst (freeAttr i vl vu))
+          (snd (freeAttr i vl vu)) p)))
+ (snd
+    (fst
+       (fixAttr i v (fst (freeAttr i vl vu))
+          (snd (freeAttr i vl vu)) p)))
+ (snd
+    (fixAttr i v (fst (freeAttr i vl vu))
+       (snd (freeAttr i vl vu)) p)).
+Proof.
+   intros.
+   destruct H as (_ & Hi & Hinotmem & Hv & HR0 & _ & _ & _ & _ & _ & _ & _ & _ & _ & _ & HR11).
+   unfold R0 in HR0.
+   unfold R11. intros j Hjlen Hjmem.
+   destruct (freeAttr i vl vu) as (nvl, nvu) eqn:Hnv; simpl.
+   destruct (fixAttr i v nvl nvu p) as ((nnvl, nnvu), np) eqn:Hnnv; simpl.
+
+   assert (Hnsize := free_size nb_feature i vl vu).
+   rewrite Hnv in Hnsize; simpl in Hnsize.
+   lapply Hnsize; [ clear Hnsize; intros Hnsize | repeat split; try lia ].
+   destruct Hnsize as (Hnvlsize, Hnvusize).
+   assert (Hnnsize := fix_size nb_feature i v nvl nvu p).
+   rewrite Hnnv in Hnnsize; simpl in Hnnsize.
+   lapply Hnnsize; [ clear Hnnsize; intros Hnnsize | repeat split; try lia ].
+   destruct Hnnsize as (Hnnvlsize, Hnnvusize).
+
+   cut (j = i \/ j <> i); [| lia ].
+   intros H; destruct H as [ Heq | Hneq ].
+   - rewrite Heq in *. contradiction.
+
+   - unshelve eassert (Hnnvals := fix_get nb_feature _ j _ _ _ _ _ _ _ (conj _ (conj _ (conj _ (conj _ (conj _ (conj _ (conj _ (conj _ Hnnv))))))))); try lia.
+      unshelve eassert (Hnvals := free_get nb_feature _ j _ _ _ _ (conj  _ (conj _ (conj _ (conj _ (conj _ (conj Hnv _))))))); try lia.
+      destruct Hnnvals, Hnvals. rewrite <- H, <- H0, <- H1, <- H2.
+      now apply (HR11 j).
 Qed.
 
 
@@ -4421,7 +4479,7 @@ Proof.
 
 Lemma preserveR7Cas3_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
   (R0 k s i v vl vu p /\
    R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
    R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -4432,6 +4490,7 @@ Proof.
    unfold R7.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -4477,6 +4536,7 @@ Proof.
    intro rnvu.
    rewrite rnvu.
    apply HR7.
+   split; [| tauto ].
    split.
    lia.
    split.
@@ -4534,7 +4594,7 @@ Proof.
 
 Lemma preserveR9Cas3_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
   (R0 k s i v vl vu p /\
    R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
    R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
@@ -4545,6 +4605,7 @@ Proof.
    unfold R9.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -4582,7 +4643,7 @@ Proof.
    intro rnnvu.
    rewrite rnnvu.
    apply HR9.
-   lia.
+   repeat split; try lia. tauto.
    symmetry.
    apply (free_get nb_feature i j vl vu nvl nvu).
    repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
@@ -4632,7 +4693,35 @@ Proof.
    Qed.
 
 
-Lemma ppost1_AXp :  forall (k : list T -> Tk) (s : list nat) (v vl vu: list T) (p:list nat),
+Lemma preserveR11Cas3_AXp : 
+  forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu:  list T) (p:list nat), 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) = (k nvu)) /\ 
+  (R0 k s i v vl vu p /\
+   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
+   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
+   R9 k s i v vl vu p /\ R10 k s i v vl vu p /\ R11 k s i v vl vu p) 
+ -> R11 k s (i+1) v (fst (freeAttr i vl vu)) (snd (freeAttr i vl vu)) p.
+ Proof.
+   intros.
+   destruct H as (_ & Hi & Hinotmem & Hk & HR0 & _ & _ & _ & _ & _ & _ & _ & _ & _ & _ & HR11).
+   unfold R0 in HR0.
+   unfold R11.
+   intros j Hjlen Hjmem.
+   destruct (freeAttr i vl vu) as (nvl, nvu) eqn:Hnv; simpl.
+
+   cut (i = j \/ i <> j); [| lia ].
+   intros [ Heq | Hneq ].
+   - rewrite <- Heq.
+      unshelve eassert (Hfreei := free_i nb_feature _ _ _ _ _ (conj _ (conj _ (conj _ (conj Hnv _))))); try lia.
+      assumption.
+
+   - unshelve eassert (Hfreeget := free_get nb_feature _ j _ _ _ _ (conj _ (conj _ (conj _ (conj _ (conj _ (conj Hnv _))))))); try lia.
+      destruct Hfreeget. rewrite <- H, <- H0.
+      now apply (HR11 j).
+Qed.
+
+ 
+ Lemma ppost1_AXp :  forall (k : list T -> Tk) (s : list nat) (v vl vu: list T) (p:list nat),
   R0 k s nb_feature v vl vu p /\
   R1 k s nb_feature v vl vu p /\
   R2 k s nb_feature v vl vu p /\
@@ -4644,6 +4733,7 @@ Lemma ppost1_AXp :  forall (k : list T -> Tk) (s : list nat) (v vl vu: list T) (
   R8 k s nb_feature v vl vu p /\
   R9 k s nb_feature v vl vu p /\
   R10 k s nb_feature v vl vu p /\
+  R11 k s nb_feature v vl vu p /\
   stable k
 -> is_weak_AXp k v p.
 Proof.
@@ -4658,12 +4748,14 @@ Proof.
    destruct H as (HR7,H).
    destruct H as (HR8,H).
    destruct H as (HR9,H).
-   destruct H as (HR10,k_stable).
+   destruct H as (HR10,H).
+   destruct H as (HR11,k_stable).
    unfold R0 in HR0.
    unfold R1 in HR1.
    unfold R2 in HR2.
    unfold R6 in HR6.
    unfold R7 in HR7.
+   unfold R11 in HR11.
 
    unfold is_weak_AXp.
    intros.
@@ -4715,8 +4807,14 @@ Proof.
      rewrite dgetivl.
      apply H3.
      lia.
+     destruct (mem_not_mem i s).
+     apply (HR11 i).
+     lia.
+     assumption.
      apply (HR7 i).
+     split.
      repeat split; [apply H0|apply H0|apply H4].
+     assumption.
    
    split.
 
@@ -4743,8 +4841,14 @@ Proof.
      rewrite dgetivu.
      apply H3.
      lia.
+     destruct (mem_not_mem i s).
+     apply (HR11 i).
+     lia.
+     assumption.
      apply (HR7 i).
+     split.
      repeat split; [apply H0|apply H0|apply H4].
+     assumption.
    
    (* k vl = k vu *)
    apply HR2_1.
@@ -4818,7 +4922,10 @@ tauto.
 split.
 apply preserveR9Cas2_AXp.
 tauto.
+split.
 apply preserveR10Cas2_AXp.
+tauto.
+apply preserveR11Cas2_AXp.
 tauto.
 (* lien rec *)
 apply findAXp_aux_spec2.
@@ -4862,7 +4969,10 @@ tauto.
 split.
 apply preserveR9Cas3_AXp.
 tauto.
+split.
 apply preserveR10Cas3_AXp.
+tauto.
+apply preserveR11Cas3_AXp.
 tauto.
 (* lien rec *)
 apply findAXp_aux_spec3.
@@ -4872,7 +4982,7 @@ destruct H3 as (H3 & H4 & H5 & H6).
 replace (findAXp_aux k s i v vl vu p) with (findAXp_aux k s (i+1) v vl vu p).
 apply H0.
 (* préservation des require *)
-repeat split; try (unfold R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10 in H1; tauto).
+repeat split; try (unfold R0, R1, R2, R3, R4, R5, R6, R7, R8, R9, R10, R11 in H1; tauto).
 destruct H1 as (_ & H1 & _).
 apply H1.
 lia.
@@ -4908,22 +5018,26 @@ apply H1.
 assumption.
 destruct H1 as (_ & _ & _ & _ & _ & _ & _ & H1 & _).
 apply H1.
-destruct H7 as (H7 & H8 & H9).
+destruct H7 as ((H7 & H8 & H9) & H10).
 repeat split; try lia; try auto.
-admit. (* à revoir ! (R7) *)
+cut (j <> i); [ lia |]. intros Heq; rewrite Heq in *; contradiction.
 destruct H1 as (_ & _ & _ & _ & _ & _ & _ & H1 & _).
 apply H1.
-destruct H7 as (H7 & H8 & H9).
+destruct H7 as ((H7 & H8 & H9) & H10).
 repeat split; try lia; try auto.
-admit. (* à revoir ! (R7) *)
+cut (j <> i); [ lia |]. intros Heq; rewrite Heq in *; contradiction.
 destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & H1 & _).
 apply H1.
-destruct H7 as (H7 & H8 & H9 & H10 & H11).
+destruct H7 as (H7 & H8 & H9 & H10 & H11 & H12).
 repeat split; try lia; try auto.
 destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & H1 & _).
 apply H1.
-destruct H7 as (H7 & H8 & H9 & H10 & H11).
+destruct H7 as (H7 & H8 & H9 & H10 & H11 & H12).
 repeat split; try lia; try auto.
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & _ & H1).
+now apply H1.
+destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & _ & H1).
+now apply H1.
 (* lien rec *)
 rewrite <- findAXp_aux_spec4.
 reflexivity.
@@ -4987,7 +5101,7 @@ simpl.
 unfold R10 in H.
 apply H.
 lia.
-Admitted.
+Qed.
 
 
 Fixpoint initVectors_aux (s : list nat) (j : nat) (vl vu : list T) :=
@@ -5192,7 +5306,7 @@ led (lambda j) (get j v) /\ led (get j v) (nu j))
 ->
 R0 k s 0 v vl vu nil /\ R1 k s 0 v vl vu nil /\ R2 k s 0 v vl vu nil /\ R3 k s 0 v vl vu nil /\ 
 R4 k s 0 v vl vu nil /\ R5 k s 0 v vl vu nil /\ R6 k s 0 v vl vu nil /\ R7 k s 0 v vl vu nil /\ 
-R8 k s 0 v vl vu nil /\ R9 k s 0 v vl vu nil /\ R10 k s 0 v vl vu nil.
+R8 k s 0 v vl vu nil /\ R9 k s 0 v vl vu nil /\ R10 k s 0 v vl vu nil /\ R11 k s 0 v vl vu nil.
 Proof.
    intros.
    destruct H as (Hstable & H & Hseed & H1 & H2).
@@ -5284,9 +5398,13 @@ Proof.
    split.
    (* R9 *)
    unfold R9.
-   admit. (* mettre à jour R9 *)
-   (* simpl. *)
-   (* tauto. *)
+   intros j.
+   assert (Hj := initVectorsCorrect _ _ _ _ H2 j).
+   intros.
+   apply Hj.
+   now rewrite H.
+   tauto.
+   split.
    (* R10 *)
    unfold R10.
    simpl.
@@ -5298,7 +5416,14 @@ Proof.
    auto.
    apply (list_mem_not_nil x (x0 ++ x :: x1)).
    apply list_mem_middle.
-Admitted.
+   (* R11 *)
+   unfold R11.
+   intros.
+   assert (Hj := initVectorsCorrect _ _ _ _ H2 j).
+   apply Hj.
+   now rewrite H.
+   assumption.
+Qed.
 
 Lemma pre_post_findAXp : forall (k : list T -> Tk) (s : list nat) (v: list T), 
 (
