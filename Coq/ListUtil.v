@@ -39,7 +39,6 @@ Proof.
    apply H.
 Qed.
 
-
 Lemma mem_not_mem : forall (i:nat) (p: list nat), mem i p \/ ~ mem i p.
 Proof.
    intros.
@@ -62,6 +61,18 @@ Proof.
    tauto.
    lia.
 Qed.
+
+Lemma mem_coherent_conv : forall (i : nat) (p : list nat), mem_nat i p = false <-> ~ mem i p.
+Proof.
+  intros. split; intros.
+  - destruct (mem_not_mem i p) as [ Hmem | Hnotmem ].
+    + apply mem_coherent in Hmem. congruence.
+    + exact Hnotmem.
+  - destruct (mem_nat i p) eqn:Heq.
+    + apply mem_coherent in Heq. contradiction.
+    + reflexivity.
+Qed.
+
 
 Lemma list_mem_not_nil {a:Type}: 
 forall (x :a) (l:list a), mem x l -> l <> nil.
