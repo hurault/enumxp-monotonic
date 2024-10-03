@@ -2925,337 +2925,97 @@ exists l0.
 reflexivity.
 Qed.
 
-(* lambda / nu pour feature <= à i et v pour >i *)
-Fixpoint ln_i_v_aux (ind:nat) (i:nat) (s:nat) (v : list T) (ln : nat -> T) (p : list nat): list T  :=
-   match s with
-   | 0 => nil
-   | S smoins1 => if (ind <=? i)
-          then if (mem_nat ind p)
-               then (get ind v)::(ln_i_v_aux (ind+1) i smoins1 v ln p)
-               else (ln ind)::(ln_i_v_aux (ind+1) i smoins1 v ln p)
-          else (get ind v)::(ln_i_v_aux (ind+1) i smoins1 v ln p)
-   end.
 
-Definition ln_i_v (i:nat) (v : list T) (ln : nat -> T)  (p : list nat) : list T  := ln_i_v_aux 0 i (List.length v) v ln p.
+Definition ln_i_v_f (ln : nat -> T) i s p j x :=
+   if orb (andb (j <=? i) (negb (mem_nat j p))) (mem_nat j s) then ln j
+   else x.
+
+Definition ln_i_v (v : list T) (ln : nat -> T) (i : nat) (s p : list nat) :=
+   mapi (ln_i_v_f ln i s p) v.
 
 
-
-Lemma get_sup_i_ln_i_v_aux : forall (s ind i j :nat) (v : list T) (ln : nat -> T)  (p : list nat),
-ind > i /\ j>=0 /\ j <s -> get j (ln_i_v_aux ind i s v ln p) = get (ind+j) v.
+Lemma get_mem_s_ln_i_v : forall (j i : nat) (v : list T) (ln : nat -> T) (s p : list nat),
+   j < length v -> mem j s -> get j (ln_i_v v ln i s p) = ln j.
 Proof.
-induction s.
-(* cas de base -> pas possible *)
-lia.
-(* cas général *)
-intros.
-simpl.
-cut (ind <=? i = false).
-intro rt.
-rewrite rt.
-destruct j.
-(* j = 0 *)
-unfold get.
-simpl.
-cut (ind+0 = ind).
-intro r0.
-rewrite r0.
-reflexivity.
-lia.
-(* j<>0 *)
-unfold get.
-simpl.
-cut (ind + S j = ind + 1 + j).
-intro r1.
-rewrite r1.
-apply (IHs (ind+1) i j v).
-lia.
-lia.
-cut (not (ind <=i)).
-rewrite <- Nat.leb_le.
-destruct ((ind <=? i)).
-tauto.
-tauto.
-lia.
+   intros.
+   unfold get, ln_i_v.
+   rewrite List.nth_indep with (d' := ln j).
+   pattern (ln j) at 1.
+   replace (ln j) with (ln_i_v_f ln i s p j (ln j)).
+   rewrite mapi_nth.
+   unfold ln_i_v_f.
+   apply mem_coherent in H0. rewrite H0, Bool.orb_true_r; simpl.
+   reflexivity.
+   unfold ln_i_v_f.
+   apply mem_coherent in H0. rewrite H0, Bool.orb_true_r; simpl.
+   reflexivity.
+   now rewrite mapi_length.
 Qed.
 
-
-Lemma get_sup_i_ln_i_v_aux_2 : forall (s ind i j :nat) (v : list T) (ln : nat -> T)  (p : list nat),
-ind <= i /\ j<s/\  j>(i-ind) -> get j (ln_i_v_aux ind i s v ln p) = get (ind+j) v.
+Lemma get_sup_i_ln_i_v : forall (j i : nat) (v : list T) (ln : nat -> T) (s p : list nat),
+   i < j -> ~ mem j s -> get j (ln_i_v v ln i s p) = get j v.
 Proof.
-  induction s.
-  (* cas de base -> pas possible *)
-  lia.
-  (* cas général *)
-  intros.
-  simpl.
-  cut (ind <=? i = true).
-  intro rt.
-  rewrite rt.
-  destruct j.
-  (* j = 0 -> pas possible *)
-  lia.
-  (* j<>0 *)
-  unfold get.
-  simpl.
-  cut (ind + S j = ind + 1 + j).
-  intro r1.
-  rewrite r1.
-  cut (ind+1 <=i \/ ind+1>i).
-  intro di.
-  destruct di.
-  (* ind + 1 <= i *)
-  destruct (mem_nat ind p).
-  simpl.
-  apply (IHs (ind+1) i j v ln p). 
-  lia.
-  apply (IHs (ind+1) i j v ln p). 
-  lia.
-  (* ind + 1 > i *)
-  destruct (mem_nat ind p).
-  simpl.
-  apply get_sup_i_ln_i_v_aux.
-  lia.
-  simpl.
-  apply get_sup_i_ln_i_v_aux.
-  lia.
-  lia.
-  lia.
-  cut (ind <=i).
-  rewrite <- Nat.leb_le.
-  tauto.
-  lia.
+   intros j i v ln s p H0 H1.
+   unfold get, ln_i_v.
+   pattern Exception at 1.
+   replace Exception with (ln_i_v_f ln i s p j Exception).
+   rewrite mapi_nth.
+   unfold ln_i_v_f.
+   apply leb_iff_conv in H0. rewrite H0; simpl.
+   apply mem_coherent_conv in H1. rewrite H1; simpl.
+   reflexivity.
+   unfold ln_i_v_f.
+   apply leb_iff_conv in H0. rewrite H0; simpl.
+   apply mem_coherent_conv in H1. rewrite H1; simpl.
+   reflexivity.
 Qed.
 
-Lemma get_sup_i_ln_i_v : forall (ind:nat) (i:nat) (v : list T) (ln : nat -> T) (p : list nat),
-ind >=0 /\ ind <(List.length v)  /\ ind > i -> get ind (ln_i_v i v ln p) = get ind v.
+Lemma get_inf_mem_i_ln_i_v : forall (j i : nat) (v : list T) (ln : nat -> T) (s p : list nat),
+   j <= i -> mem j p -> ~ mem j s -> get j (ln_i_v v ln i s p) = get j v.
+Proof.
+   intros j i v ln s p H0 H1 H2.
+   unfold get, ln_i_v.
+   pattern Exception at 1.
+   replace Exception with (ln_i_v_f ln i s p j Exception).
+   rewrite mapi_nth.
+   unfold ln_i_v_f.
+   apply leb_iff in H0. rewrite H0; simpl.
+   apply mem_coherent in H1. rewrite H1; simpl.
+   apply mem_coherent_conv in H2. rewrite H2; simpl.
+   reflexivity.
+   unfold ln_i_v_f.
+   apply leb_iff in H0. rewrite H0; simpl.
+   apply mem_coherent in H1. rewrite H1; simpl.
+   apply mem_coherent_conv in H2. rewrite H2; simpl.
+   reflexivity.
+Qed.
+
+Lemma get_inf_not_mem_i_ln_i_v : forall (j i : nat) (v : list T) (ln : nat -> T) (s p : list nat),
+   j < length v -> j <= i -> ~ mem j p -> get j (ln_i_v v ln i s p) = ln j.
+Proof.
+   intros j i v ln s p H0 H1 H2.
+   unfold get, ln_i_v.
+   rewrite List.nth_indep with (d' := ln j).
+   pattern (ln j) at 1.
+   replace (ln j) with (ln_i_v_f ln i s p j (ln j)).
+   rewrite mapi_nth.
+   unfold ln_i_v_f.
+   apply leb_iff in H1. rewrite H1; simpl.
+   apply mem_coherent_conv in H2. rewrite H2; simpl.
+   reflexivity.
+   unfold ln_i_v_f.
+   apply leb_iff in H1. rewrite H1; simpl.
+   apply mem_coherent_conv in H2. rewrite H2; simpl.
+   reflexivity.
+   now rewrite mapi_length.
+Qed.
+
+Lemma length_ln_i_v : forall (i : nat) (v : list T) (ln : nat -> T) (s p : list nat),
+   length (ln_i_v v ln i s p) = (length v).
 Proof.
    intros.
    unfold ln_i_v.
-   apply (get_sup_i_ln_i_v_aux_2 (List.length v) 0 i ind v ln p).
-   lia.
-Qed.
-
-
-Lemma get_inf_mem_i_ln_i_v_aux : forall (s ind i j :nat) (v : list T) (ln : nat -> T) (p : list nat),
-ind <= i /\ j>=0 /\ j <s /\ j <= (i-ind) /\ mem (ind+j) p-> get j (ln_i_v_aux ind i s v ln p) = get (ind+j) v.
-Proof.
-  induction s.
-  (* cas de base -> pas possible *)
-  lia.
-  (* cas général *)
-  intros.
-  simpl.
-  cut (ind <=? i = true).
-  intro rt.
-  rewrite rt.
-  destruct j.
-  (* j = 0 *)
-  unfold get.
-  simpl.
-  cut (ind+0 = ind).
-  intro r0.
-  rewrite r0.
-  cut (mem_nat ind p=true \/ mem_nat ind p=false).
-  intro d.
-  destruct d.
-  rewrite H0.
-  reflexivity.
-  cut False.
-  tauto.
-  destruct H.
-  destruct H1.
-  destruct H2.
-  destruct H3.
-  rewrite r0 in H4.
-  generalize H4.
-  rewrite <- mem_coherent.
-  rewrite H0.
-  discriminate.
-  destruct (mem_nat ind p).
-  auto.
-  auto.
-  lia.
-  (* j<>0 *)
-  unfold get.
-  cut (mem_nat ind p=true \/ mem_nat ind p=false).
-  intro d.
-  destruct d.
-  rewrite H0.
-  simpl.
-  cut (ind + S j = ind + 1 + j).
-  intro r1.
-  rewrite r1.
-  apply (IHs (ind+1) i j v ln p).
-  rewrite r1 in H.
-  repeat split ;[lia|lia|lia|lia|apply H].
-  lia.
-  rewrite H0.
-  simpl.
-  cut (ind + S j = ind + 1 + j).
-  intro r1.
-  rewrite r1.
-  apply (IHs (ind+1) i j v ln p).
-  rewrite r1 in H.
-  repeat split ;[lia|lia|lia|lia|apply H].
-  lia.
-  destruct (mem_nat ind p).
-  auto.
-  auto.
-  cut (ind <= i).
-  apply Nat.leb_le.
-  apply H.
-Qed.
-
-Lemma get_inf_mem_i_ln_i_v : forall (ind:nat) (i:nat) (v : list T) (ln : nat -> T) (p : list nat),
-ind >=0 /\ ind <(List.length v)  /\ ind <= i /\ mem ind p -> get ind (ln_i_v i v ln p) = get ind v.
-Proof.
-   intros.
-   unfold ln_i_v.
-   apply (get_inf_mem_i_ln_i_v_aux (List.length v) 0 i ind v ln p).
-   cut (0+ind = ind).
-   intro rind.
-   repeat split ; [lia|lia|lia|lia|apply H].
-   lia.
-Qed.
-
-
-Lemma get_inf_not_mem_i_ln_i_v_aux : forall (s ind i j :nat) (v : list T) (ln : nat -> T) (p : list nat),
-ind <= i /\ j>=0 /\ j <s /\ j <= (i-ind) /\ ~mem (ind+j) p-> get j (ln_i_v_aux ind i s v ln p) = ln (ind+j).
-Proof.
-  induction s.
-  (* cas de base -> pas possible *)
-  lia.
-  (* cas général *)
-  intros.
-  simpl.
-  cut (ind <=? i = true).
-  intro rt.
-  rewrite rt.
-  destruct j.
-  (* j = 0 *)
-  unfold get.
-  simpl.
-  cut (ind+0 = ind).
-  intro r0.
-  rewrite r0.
-  cut (mem_nat ind p=true \/ mem_nat ind p=false).
-  intro d.
-  destruct d.
-
-  cut False.
-  tauto.
-  destruct H.
-  destruct H1.
-  destruct H2.
-  destruct H3.
-  rewrite r0 in H4.
-  generalize H4.
-  rewrite <- mem_coherent.
-  rewrite H0.
-  auto.
-
-  rewrite H0.
-  reflexivity.
-
-  destruct (mem_nat ind p).
-  auto.
-  auto.
-
-  lia.
-  (* j<>0 *)
-  unfold get.
-  cut (mem_nat ind p=true \/ mem_nat ind p=false).
-  intro d.
-  destruct d.
-  rewrite H0.
-  simpl.
-  cut (ind + S j = ind + 1 + j).
-  intro r1.
-  rewrite r1.
-  apply (IHs (ind+1) i j v ln p).
-  rewrite r1 in H.
-  repeat split ;[lia|lia|lia|lia|apply H].
-  lia.
-  rewrite H0.
-  simpl.
-  cut (ind + S j = ind + 1 + j).
-  intro r1.
-  rewrite r1.
-  apply (IHs (ind+1) i j v ln p).
-  rewrite r1 in H.
-  repeat split ;[lia|lia|lia|lia|apply H].
-  lia.
-  destruct (mem_nat ind p).
-  auto.
-  auto.
-  cut (ind <= i).
-  apply Nat.leb_le.
-  apply H.
-Qed.
-
-
-Lemma get_inf_not_mem_i_ln_i_v : forall (ind:nat) (i:nat) (v : list T) (ln : nat -> T) (p : list nat),
-ind >=0 /\ ind <(List.length v)  /\ ind <= i /\ ~ mem ind p -> get ind (ln_i_v i v ln p) = ln ind.
-Proof.
-   intros.
-   unfold ln_i_v.
-   apply (get_inf_not_mem_i_ln_i_v_aux (List.length v) 0 i ind v ln p).
-   cut (0+ind = ind).
-   intro rind.
-   repeat split ; [lia|lia|lia|lia|apply H].
-   lia.
-Qed.
-
-Lemma length_ln_i_v_aux : forall (s ind i :nat) (v : list T) (ln : nat -> T) (p : list nat), length (ln_i_v_aux ind i s v ln p) = s.
-Proof.
-   induction s.
-   simpl.
-   auto.
-   intros.
-   simpl.
-   cut (ind <=? i=true \/ ind <=? i=false).
-   intro c.
-   destruct c.
-   rewrite H.
-   cut (mem_nat ind p=true \/ mem_nat ind p=false).
-   intro d.
-   destruct d.
-   rewrite H0.
-   simpl.
-   generalize (IHs (ind+1) i v ln p).
-   auto.
-   rewrite H0.
-   simpl.
-   generalize (IHs (ind+1) i v ln p).
-   auto.
-   destruct (mem_nat ind p).
-   auto.
-   auto.
-   rewrite H.
-   simpl.
-   generalize (IHs (ind+1) i v).
-   auto.
-   cut (ind <= i \/ ind > i).
-   intro c.
-   destruct c.
-   left.
-   apply Nat.leb_le.
-   apply H.
-   right.
-   cut (not (ind <=i)).
-   rewrite <- Nat.leb_le.
-   destruct ((ind <=? i)).
-   tauto.
-   tauto.
-   lia.
-   lia.
-Qed.
-
-Lemma length_ln_i_v : forall (i :nat) (v : list T) (ln : nat -> T) (p : list nat), length (ln_i_v i v ln p) = (length v).
-Proof.
-   intros.
-   unfold ln_i_v.
-   apply length_ln_i_v_aux.
+   apply mapi_length.
 Qed.
 
 
