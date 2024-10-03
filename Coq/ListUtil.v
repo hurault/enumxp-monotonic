@@ -199,3 +199,47 @@ Proof.
     + now left.
     + right. assumption.
 Qed.
+
+
+Fixpoint mapi_aux {A B : Type} (f : nat -> A -> B) (l : list A) (i : nat) : list B :=
+  match l with
+  | nil => nil
+  | cons x t => cons (f i x) (mapi_aux f t (S i))
+  end.
+
+Definition mapi {A B : Type} (f : nat -> A -> B) (l : list A) : list B :=
+  mapi_aux f l 0.
+
+Lemma mapi_aux_length {A B : Type} (f : nat -> A -> B) l i :
+  length (mapi_aux f l i) = length l.
+Proof.
+  generalize dependent i.
+  induction l; intros.
+  - reflexivity.
+  - simpl. now rewrite IHl.
+Qed.
+
+Theorem mapi_length {A B : Type} (f : nat -> A -> B) l :
+  length (mapi f l) = length l.
+Proof.
+  apply mapi_aux_length.
+Qed.
+
+Lemma mapi_aux_nth {A B : Type} (f : nat -> A -> B) l i j err :
+  nth j (mapi_aux f l i) (f (i + j) err) = f (i + j) (nth j l err).
+Proof.
+  generalize dependent i.
+  generalize dependent j.
+  induction l; intros.
+  - simpl. now destruct j.
+  - simpl. destruct j.
+    + f_equal. lia.
+    + replace (i + S j) with ((S i) + j); [| lia ].
+      apply IHl.
+Qed.
+
+Theorem mapi_nth {A B : Type} (f : nat -> A -> B) l j err :
+  nth j (mapi f l) (f j err) = f j (nth j l err).
+Proof.
+  apply mapi_aux_nth.
+Qed.
