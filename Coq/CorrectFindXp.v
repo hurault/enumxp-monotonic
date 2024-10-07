@@ -1608,8 +1608,8 @@ exists (nvl nvu : list T),
 length nvl = nb_feature /\
 length nvu = nb_feature /\
 (forall (j:nat), j>=0 /\ j< nb_feature 
-  ->  ((mem j x1 \/ j>x) /\ get j nvl=get j v /\ get j nvu =get j v) 
-        \/ ( (not (mem j x1 \/ j>x)) /\ get j nvl =lambda j /\ get j nvu =nu j) ) 
+  ->  (((mem j x1 \/ j>x) /\ not (mem j s)) /\ get j nvl=get j v /\ get j nvu =get j v) 
+        \/ ( (not (mem j x1 \/ j>x) \/ (mem j s)) /\ get j nvl =lambda j /\ get j nvu =nu j) ) 
 /\ (k nvl) <> (k nvu)).
 
 Definition R11 (k : list T -> Tk) (s : list nat) (i : nat) (v vl vu : list T) (p : list nat) : Prop :=
@@ -3021,11 +3021,11 @@ Qed.
 
 Lemma preserveR10Cas2_AXp : 
   forall (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat), 
-  i>= 0 /\ i < nb_feature /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
+  i>= 0 /\ i < nb_feature /\ not (mem i s) /\ ( let '(nvl,nvu) :=  freeAttr i vl vu in (k nvl) <> (k nvu)) /\ 
   (R0 k s i v vl vu p /\
   R1 k s i v vl vu p /\ R2 k s i v vl vu p /\ R3 k s i v vl vu p /\ R4 k s i v vl vu p /\
   R5 k s i v vl vu p /\ R6 k s i v vl vu p /\ R7 k s i v vl vu p /\ R8 k s i v vl vu p /\ 
-  R9 k s i v vl vu p /\ R10 k s i v vl vu p) 
+  R9 k s i v vl vu p /\ R10 k s i v vl vu p /\ R11 k s i v vl vu p) 
  -> R10 k s (i + 1) v
  (fst
     (fst
@@ -3038,11 +3038,12 @@ Lemma preserveR10Cas2_AXp :
  (snd
     (fixAttr i v (fst (freeAttr i vl vu))
        (snd (freeAttr i vl vu)) p)) .
-Proof.
+Proof with (try assumption; try lia).
    intros. 
    unfold R10.
    destruct H as (Hi_inf,H).
    destruct H as (Hi_sup,H).
+   destruct H as (Hinotmem,H).
    destruct H as (Hdif_k,H).
    destruct H as (HR0,H).
    destruct H as (HR1,H).
@@ -3053,13 +3054,15 @@ Proof.
    destruct H as (HR6,H).
    destruct H as (HR7,H).
    destruct H as (HR8,H).
-   destruct H as (HR9,HR10).
+   destruct H as (HR9,H).
+   destruct H as (HR10,HR11).
    unfold R0 in HR0.
    unfold R5 in HR5.
    unfold R6 in HR6.
    unfold R7 in HR7.
    unfold R9 in HR9.
    unfold R10 in HR10.
+   unfold R11 in HR11.
    
    cut (exists (nvl nvu : list T), freeAttr i vl vu = (nvl,nvu)).
    intro varfree.
@@ -3100,8 +3103,8 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    simpl.
 
    (* lambda / nu pour feature <= à i et v pour >i *)
-   exists (ln_i_v i v lambda nil).
-   exists (ln_i_v i v nu nil).
+   exists (ln_i_v v lambda i s nil).
+   exists (ln_i_v v nu i s nil).
    split.
    rewrite (length_ln_i_v).
    apply HR0.
@@ -3113,24 +3116,28 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    cut (j>i \/ j<=i).
    intro dj.
    destruct dj.
-   (* j > 1 *)
+   (* j > i *)
+   destruct (mem_not_mem j s) as [ Hjmem | Hjnotmem ].
+   right.
+   split.
+   right.
+   assumption.
+   split; apply get_mem_s_ln_i_v...
    left.
    split.
-   auto.
    split.
-   apply get_sup_i_ln_i_v.
-   lia.
-   apply get_sup_i_ln_i_v.
-   lia.
+   now right.
+   assumption.
+   split; apply get_sup_i_ln_i_v...
    (* j <= i *)
    right.
    split.
    lia.
    split.
-   apply get_inf_not_mem_i_ln_i_v.
-   repeat split ; [lia|lia|lia|simpl;auto].
-   apply get_inf_not_mem_i_ln_i_v.
-   repeat split ; [lia|lia|lia|simpl;auto].
+   apply get_inf_not_mem_i_ln_i_v...
+   intros absurd. inversion absurd.
+   apply get_inf_not_mem_i_ln_i_v...
+   intros absurd. inversion absurd.
 
    (* j > i \/ j <= i  *)
    lia.
@@ -3141,14 +3148,14 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    rewrite varfree.
    simpl.
 
-   cut (nvl = ln_i_v i v lambda nil /\ nvu = ln_i_v i v nu nil).
+   cut (nvl = ln_i_v v lambda i s nil /\ nvu = ln_i_v v nu i s nil).
    intro defnvlu.
    destruct defnvlu as (defnlv,defnvu).
    rewrite defnlv.
    rewrite defnvu.
    auto.
    
-   cut (nvl = ln_i_v i vl lambda nil /\ nvu = ln_i_v i vu nu nil).
+   cut (nvl = ln_i_v vl lambda i s nil /\ nvu = ln_i_v vu nu i s nil).
    intro defnvlubis.
    destruct defnvlubis as (defnvl2,defnvu2).
    rewrite defnvl2.
@@ -3158,8 +3165,8 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    (* lambda_i_v i vl = lambda_i_v i v *)
    apply id_list.
    split.
-   rewrite (length_ln_i_v i vl lambda nil).
-   rewrite (length_ln_i_v i v lambda nil).
+   rewrite (length_ln_i_v i vl lambda s nil).
+   rewrite (length_ln_i_v i v lambda s nil).
    destruct HR0 as (HR0v, HR0).
    destruct HR0 as (HR0vl, HR0vu).
    rewrite HR0vl.
@@ -3170,28 +3177,27 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    intro di0.
    destruct di0.
    (* i0 <= i *)
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i v lambda nil).
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i vl lambda nil).
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i v lambda s nil)...
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i vl lambda s nil)...
    auto.
-   repeat split ; [lia|lia|lia|simpl;auto].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   intros absurd; inversion absurd.
+   intros absurd; inversion absurd.
    (* i0 > i *)
-   rewrite (get_sup_i_ln_i_v i0 i v lambda nil).
-   rewrite (get_sup_i_ln_i_v i0 i vl lambda nil).
+   rewrite (length_ln_i_v i vl lambda s nil) in H0.
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i v lambda s nil)...
+   rewrite (get_mem_s_ln_i_v i0 i vl lambda s nil)...
+   reflexivity.
+   rewrite (get_sup_i_ln_i_v i0 i v lambda s nil)...
+   rewrite (get_sup_i_ln_i_v i0 i vl lambda s nil)...
    apply HR9.
-   rewrite (length_ln_i_v i vl lambda nil) in H0.
-   (* lia. *) admit.
-   rewrite (length_ln_i_v i vl lambda nil) in H0.
+   repeat split...
    lia.
-   rewrite (length_ln_i_v i vl lambda nil) in H0.
-   lia.
-   lia.
-   auto.
    (* nu_i_v i vl = nu_i_v i v *)
    apply id_list.
    split.
-   rewrite (length_ln_i_v i vu nu nil).
-   rewrite (length_ln_i_v i v nu nil).
+   rewrite (length_ln_i_v i vu nu s nil).
+   rewrite (length_ln_i_v i v nu s nil).
    destruct HR0 as (HR0v, HR0).
    destruct HR0 as (HR0vl, HR0vu).
    rewrite HR0vu.
@@ -3202,29 +3208,28 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    intro di0.
    destruct di0.
    (* i0 <= i *)
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i v nu nil).
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i vu nu nil).
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i v nu s nil)...
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i vu nu s nil)...
    auto.
-   repeat split ; [lia|lia|lia|simpl;auto].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   intros absurd; inversion absurd.
+   intros absurd; inversion absurd.
    (* i0 > i *)
-   rewrite (get_sup_i_ln_i_v i0 i v nu nil).
-   rewrite (get_sup_i_ln_i_v i0 i vu nu nil).
+   rewrite (length_ln_i_v i vu nu s nil) in H0; try lia.
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i v nu s nil)...
+   rewrite (get_mem_s_ln_i_v i0 i vu nu s nil)...
+   reflexivity.
+   rewrite (get_sup_i_ln_i_v i0 i v nu s nil)...
+   rewrite (get_sup_i_ln_i_v i0 i vu nu s nil)...
    apply HR9.
-   rewrite (length_ln_i_v i vu nu nil) in H0.
-   (* lia. *) admit.
-   rewrite (length_ln_i_v i vu nu nil) in H0.
+   repeat split...
    lia.
-   rewrite (length_ln_i_v i vu nu nil) in H0.
-   lia.
-   lia.
-   auto.
 
    split.
    (* nvl = lambda_i_v i vl *)
    apply id_list.
    split.
-   rewrite (length_ln_i_v i vl lambda nil).
+   rewrite (length_ln_i_v i vl lambda s nil).
    destruct HR0 as (HR0v, HR0).
    destruct HR0 as (HR0vl, HR0vu).
    rewrite HR0vl.
@@ -3236,35 +3241,60 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    unfold R5 in HR5.
    destruct di0.
    (* i0 < i *)
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i vl lambda nil).
+   assert (H99 := free_size nb_feature i vl vu).
+   rewrite varfree in H99; simpl in H99.
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i vl lambda s nil).
+   replace (get i0 nvl) with (get i0 vl).
+   apply HR11...
+   apply (free_get nb_feature i i0 vl vu nvl nvu).
+   repeat split...
+   replace (length vl) with (length nvl).
+   lia.
+   lia.
+   assumption.
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i vl lambda s nil)...
    cut (get i0 nvl = get i0 vl).
    intro i0nvl.
    rewrite i0nvl.
    apply HR7.
    simpl.
-   (* lia. *) admit.
+   repeat split...
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
-   repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   repeat split...
+   intros absurd; inversion absurd.
    destruct H1.
    (* i0 = i *)
    rewrite H1.
-   rewrite (get_inf_not_mem_i_ln_i_v i i vl lambda nil).
+   rewrite (get_inf_not_mem_i_ln_i_v i i vl lambda s nil)...
    apply (free_i nb_feature i vl vu nvl nvu).
-   repeat split; [lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   repeat split...
+   intros absurd; inversion absurd.
    (* i0 > i *)
-   rewrite (get_sup_i_ln_i_v i0 i vl lambda nil).
+   assert (H99 := free_size nb_feature i vl vu).
+   rewrite varfree in H99; simpl in H99.
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i vl lambda s nil).
+   replace (get i0 nvl) with (get i0 vl).
+   apply HR11...
+   apply (free_get nb_feature i i0 vl vu nvl nvu).
+   repeat split...
+   replace (length vl) with (length nvl).
+   lia.
+   lia.
+   assumption.
+   rewrite (get_sup_i_ln_i_v i0 i vl lambda s nil).
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
-   repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
+   repeat split...
    lia.
+   assumption.
    lia.
    (* nvu = nu_i_v i vu *)
    apply id_list.
    split.
-   rewrite (length_ln_i_v i vu nu nil).
+   rewrite (length_ln_i_v i vu nu s nil).
    destruct HR0 as (HR0v, HR0).
    destruct HR0 as (HR0vl, HR0vu).
    rewrite HR0vu.
@@ -3275,30 +3305,47 @@ destruct p. (* car si p est vide pas possible d'utiliser la précondition *)
    intro di0.
    destruct di0.
    (* i0 < i *)
-   rewrite (get_inf_not_mem_i_ln_i_v i0 i vu nu nil).
+   assert (H99 := free_size nb_feature i vl vu).
+   rewrite varfree in H99; simpl in H99.
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i vu nu s nil).
+   replace (get i0 nvu) with (get i0 vu).
+   apply HR11...
+   apply (free_get nb_feature i i0 vl vu nvl nvu).
+   repeat split...
+   replace (length vu) with (length nvu).
+   lia.
+   lia.
+   assumption.
+   rewrite (get_inf_not_mem_i_ln_i_v i0 i vu nu s nil)...
    cut (get i0 nvu = get i0 vu).
    intro i0nvl.
    rewrite i0nvl.
    apply HR7.
    simpl.
-   (* lia. *) admit.
+   repeat split...
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
-   repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   repeat split...
+   intros absurd; inversion absurd.
    destruct H1.
    (* i0 = i *)
    rewrite H1.
-   rewrite (get_inf_not_mem_i_ln_i_v i i vu nu nil).
+   rewrite (get_inf_not_mem_i_ln_i_v i i vu nu s nil)...
    apply (free_i nb_feature i vl vu nvl nvu).
-   repeat split; [lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-   repeat split ; [lia|lia|lia|simpl;auto].
+   repeat split...
+   intros absurd; inversion absurd.
    (* i0 > i *)
-   rewrite (get_sup_i_ln_i_v i0 i vu nu).
+   destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+   rewrite (get_mem_s_ln_i_v i0 i vu nu)...
+   replace (get i0 nvu) with (get i0 vu).
+   apply HR11...
+   apply (free_get nb_feature i i0 vl vu nvl nvu).
+   repeat split...
+   rewrite (get_sup_i_ln_i_v i0 i vu nu)...
    symmetry.
    apply (free_get nb_feature i i0 vl vu nvl nvu).
-   repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-   lia.
+   repeat split...
    lia.
 
    (* x=i *)
@@ -3331,16 +3378,16 @@ rewrite defxx1.
 v si <i et dans p
 v pour >i *)
 
-exists (ln_i_v i v lambda (n :: p)).
-exists (ln_i_v i v nu (n :: p)).
+exists (ln_i_v v lambda i s (n :: p)).
+exists (ln_i_v v nu i s (n :: p)).
 split.
 destruct HR0.
 rewrite <- H0.
-apply (length_ln_i_v i v lambda (n::p)).
+apply (length_ln_i_v i v lambda s (n::p)).
 split.
 destruct HR0.
 rewrite <- H0.
-apply (length_ln_i_v i v nu (n::p)).
+apply (length_ln_i_v i v nu s (n::p)).
 split.
 (*forall j : nat,
 j >= 0 /\ j < nb_feature ->
@@ -3357,15 +3404,19 @@ destruct d.
   (* mem j (n :: p) *)
    cut (j<i).
    intro j_inf_i.
+   destruct (mem_not_mem j s) as [ Hjmem | Hjnotmem ].
+   right.
+   split.
+   now right.
+   split; apply get_mem_s_ln_i_v...
    left.
    split.
+   split; [| assumption ].
    left.
    apply H1.
    split.
-   apply (get_inf_mem_i_ln_i_v j i v lambda (n::p)).
-   repeat split; [lia|lia|lia|apply H1].
-   apply (get_inf_mem_i_ln_i_v j i v nu (n::p)).
-   repeat split; [lia|lia|lia|apply H1].
+   apply (get_inf_mem_i_ln_i_v j i v lambda s (n::p))...
+   apply (get_inf_mem_i_ln_i_v j i v nu s (n::p))...
      (* j<i *)
      cut (~(j >= i \/ j < 0 \/ j >= nb_feature)).
      lia.
@@ -3380,26 +3431,29 @@ destruct d.
       (* j<= i *)
       right.
       split.
+      left.
       unfold not.
       intro.
       destruct H3.
       tauto.
       lia.
       split.
-      apply (get_inf_not_mem_i_ln_i_v j i v lambda (n::p)).
-      repeat split; [lia|lia|lia|apply H1].
-      apply (get_inf_not_mem_i_ln_i_v j i v nu (n::p)).
-      repeat split; [lia|lia|lia|apply H1].
+      apply (get_inf_not_mem_i_ln_i_v j i v lambda s (n::p))...
+      apply (get_inf_not_mem_i_ln_i_v j i v nu s (n::p))...
       (* j>i *)
+      destruct (mem_not_mem j s) as [ Hjmem | Hjnotmem ].
+      right.
+      split.
+      now right.
+      split; apply get_mem_s_ln_i_v...
       left.
       split.
+      split; [| assumption ].
       right.
       apply H2.
       split.
-      apply (get_sup_i_ln_i_v j i v lambda (n::p)).
-      lia.
-      apply (get_sup_i_ln_i_v j i v nu (n::p)).
-      lia.
+      apply (get_sup_i_ln_i_v j i v lambda s (n::p))...
+      apply (get_sup_i_ln_i_v j i v nu s (n::p))...
       lia.
 (* mem j (n :: p) \/ ~ mem j (n :: p) *)
 tauto.
@@ -3409,7 +3463,7 @@ rewrite (surjective_pairing (freeAttr i vl vu)).
 rewrite varfree.
 simpl.
 
-cut (nvl = ln_i_v i v lambda (n::p) /\ nvu = ln_i_v i v nu (n::p)).
+cut (nvl = ln_i_v v lambda i s (n::p) /\ nvu = ln_i_v v nu i s (n::p)).
 intro defnvlu.
 destruct defnvlu as (defnlv,defnvu).
 rewrite defnlv.
@@ -3421,7 +3475,7 @@ split.
 apply id_list.
 split.
   (* length nvl = length (ln_i_v i v lambda (n :: p)) *)
-  rewrite (length_ln_i_v i v lambda (n :: p)).
+  rewrite (length_ln_i_v i v lambda s (n :: p)).
   destruct HR0 as (HR0v, HR0).
   destruct HR0 as (HR0vl, HR0vu).
   rewrite HR0v.
@@ -3438,49 +3492,64 @@ split.
     intro dmem.
     destruct dmem.
       (* mem i0 (n :: p) *)
-      rewrite (get_inf_mem_i_ln_i_v i0 i v lambda (n::p)).
+      destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+      rewrite (get_mem_s_ln_i_v i0 i v lambda s (n::p))...
+      replace (get i0 nvl) with (get i0 vl).
+      apply HR11...
+      apply (free_get nb_feature i i0 vl vu nvl nvu).
+      repeat split...
+      rewrite (get_inf_mem_i_ln_i_v i0 i v lambda s (n::p))...
       transitivity ( get i0 vl).
       symmetry.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
       repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
       apply HR6.
       apply H2.
-      repeat split; [lia|lia|lia|apply H2].
       (* ~ mem i0 (n :: p) *)
-      rewrite (get_inf_not_mem_i_ln_i_v i0 i v lambda (n::p)).
+      destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+      rewrite (get_mem_s_ln_i_v i0 i v lambda s (n::p))...
+      replace (get i0 nvl) with (get i0 vl).
+      apply HR11...
+      apply (free_get nb_feature i i0 vl vu nvl nvu).
+      repeat split...
+      rewrite (get_inf_not_mem_i_ln_i_v i0 i v lambda s (n::p))...
       transitivity ( get i0 vl).
       symmetry.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
-      repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
+      repeat split...
       apply HR7.
-      (* repeat split; [lia|lia|apply H2]. *) admit.
-      repeat split; [lia|lia|lia|apply H2].
+      repeat split...
       (* mem i0 (n :: p) \/ ~ mem i0 (n :: p) *)
       tauto.
      destruct H1.
     (* i0 = i *)
     rewrite H1.
-    rewrite (get_inf_not_mem_i_ln_i_v i i v lambda (n::p)).
+    rewrite (get_inf_not_mem_i_ln_i_v i i v lambda s (n::p))...
     apply (free_i nb_feature i vl vu nvl nvu).
-    repeat split; [lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-    repeat split ; [lia|lia|lia|apply (HR5 i)].
+    repeat split...
+    apply (HR5 i).
     lia.
     (* i0 > i *)
-    rewrite (get_sup_i_ln_i_v i0 i v lambda (n::p)).
+    destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+    rewrite (get_mem_s_ln_i_v i0 i v lambda s (n::p))...
+    replace (get i0 nvl) with (get i0 vl).
+    apply HR11...
+    apply (free_get nb_feature i i0 vl vu nvl nvu).
+    repeat split...
+    rewrite (get_sup_i_ln_i_v i0 i v lambda s (n::p))...
     transitivity ( get i0 vl).
     symmetry.
     apply (free_get nb_feature i i0 vl vu nvl nvu).
-    repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-    apply HR9.
-    (* lia. *) admit.
-    lia.
+    repeat split...
+    apply HR9...
+    repeat split...
    (* i0 < i \/ i0 = i \/ i0 > i *)
    lia.
    (* nvu = ln_i_v i v nu (n :: p) *)
   apply id_list.
   split.
   (* length nvu = length (ln_i_v i v nu (n :: p)) *)
-  rewrite (length_ln_i_v i v nu (n :: p)).
+  rewrite (length_ln_i_v i v nu s (n :: p)).
   destruct HR0 as (HR0v, HR0).
   destruct HR0 as (HR0vl, HR0vu).
   rewrite HR0v.
@@ -3497,42 +3566,57 @@ split.
     intro dmem.
     destruct dmem.
       (* mem i0 (n :: p) *)
-      rewrite (get_inf_mem_i_ln_i_v i0 i v nu (n::p)).
+      destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+      rewrite (get_mem_s_ln_i_v i0 i v nu s (n::p))...
+      replace (get i0 nvu) with (get i0 vu).
+      apply HR11...
+      apply (free_get nb_feature i i0 vl vu nvl nvu).
+      repeat split...
+      rewrite (get_inf_mem_i_ln_i_v i0 i v nu s (n::p))...
       transitivity ( get i0 vu).
       symmetry.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
-      repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
+      repeat split...
       apply HR6.
       apply H2.
-      repeat split; [lia|lia|lia|apply H2].
+      repeat split...
       (* ~ mem i0 (n :: p) *)
-      rewrite (get_inf_not_mem_i_ln_i_v i0 i v nu (n::p)).
+      destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+      rewrite (get_mem_s_ln_i_v i0 i v nu s (n::p))...
+      replace (get i0 nvu) with (get i0 vu).
+      apply HR11...
+      apply (free_get nb_feature i i0 vl vu nvl nvu).
+      repeat split...
+      rewrite (get_inf_not_mem_i_ln_i_v i0 i v nu s (n::p))...
       transitivity ( get i0 vu).
       symmetry.
       apply (free_get nb_feature i i0 vl vu nvl nvu).
-      repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
+      repeat split...
       apply HR7.
-      (* repeat split; [lia|lia|apply H2]. *) admit.
-      repeat split; [lia|lia|lia|apply H2].
+      repeat split...
       (* mem i0 (n :: p) \/ ~ mem i0 (n :: p) *)
       tauto.
      destruct H1.
     (* i0 = i *)
     rewrite H1.
-    rewrite (get_inf_not_mem_i_ln_i_v i i v nu (n::p)).
+    rewrite (get_inf_not_mem_i_ln_i_v i i v nu s (n::p))...
     apply (free_i nb_feature i vl vu nvl nvu).
-    repeat split; [lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-    repeat split ; [lia|lia|lia|apply (HR5 i)].
-    lia.
+    repeat split...
+    apply (HR5 i)...
     (* i0 > i *)
-    rewrite (get_sup_i_ln_i_v i0 i v nu (n::p)).
+    destruct (mem_not_mem i0 s) as [ Hi0mem | Hi0notmem ].
+    rewrite (get_mem_s_ln_i_v i0 i v nu s (n::p))...
+    replace (get i0 nvu) with (get i0 vu).
+    apply HR11...
+    apply (free_get nb_feature i i0 vl vu nvl nvu).
+    repeat split...
+    rewrite (get_sup_i_ln_i_v i0 i v nu s (n::p))...
     transitivity ( get i0 vu).
     symmetry.
     apply (free_get nb_feature i i0 vl vu nvl nvu).
-    repeat split; [lia | lia | lia | lia | lia | apply varfree | apply HR0 | apply HR0].
-    apply HR9.
-    (* lia. *) admit.
-    lia.
+    repeat split...
+    apply HR9...
+    repeat split...
    (* i0 < i \/ i0 = i \/ i0 > i *)
    lia.
 
@@ -3557,7 +3641,7 @@ apply varfix.
 
 (* preuve des tailles *)
 apply (preserveSizeCas2 i v vl vu nvl nvu nnvl nnvu p np).
-repeat split ; [lia | lia | apply HR0 | apply HR0 | apply HR0 | apply varfree | apply varfix].
+repeat split...
 
 (* preuve des cut avec les exists *)
 destruct (fixAttr i v nvl nvu p).
@@ -3571,7 +3655,7 @@ destruct (freeAttr i vl vu).
 exists l.
 exists l0.
 reflexivity.
-Admitted.
+Qed.
 
 
 Lemma preserveR11Cas2_AXp : 
@@ -4859,7 +4943,8 @@ intro r.
 rewrite r.
 simpl.
 unfold R10 in H.
-apply H.
+destruct H as (_ & _ & _ & _ & _ & _ & _ & _ & _ & _ & H & _).
+exact H.
 lia.
 Qed.
 
