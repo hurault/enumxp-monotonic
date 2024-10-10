@@ -1611,7 +1611,7 @@ Definition R11 (k : list T -> Tk) (s : list nat) (i : nat) (v vl vu : list T) (p
       get j vl = lambda j /\ get j vu = nu j.
 
 Definition R12 (k : list T -> Tk) (s : list nat) (i : nat) (v vl vu : list T) (p : list nat) : Prop :=
-   forall (j : nat), mem j p /\ mem j s -> False.
+   forall (j : nat), mem j p -> j < nb_feature /\ ~ mem j s.
 
 
 Definition E1  (k : list T -> Tk) (s : list nat) (i:nat) (v vl vu: list T) (p:list nat) : Prop := 
@@ -1632,7 +1632,7 @@ length vu = nb_feature /\
 /\ (k vl) <> (k vu)).
 
 Definition E4 (k : list T -> Tk) (s : list nat) (i : nat) (v vl vu : list T) (p : list nat) : Prop :=
-   forall (j : nat), mem j (findAXp_aux k s i v vl vu p) /\ mem j s -> False.
+   forall (j : nat), mem j (findAXp_aux k s i v vl vu p) -> j < nb_feature /\ ~ mem j s.
 
 
 Lemma my_induction : 
@@ -3737,13 +3737,13 @@ Proof.
    intros [ Hjeq | Hjneq ].
    - (* j = i *)
       subst.
-      intros (_ & absurd); contradiction.
+      intros Hi. split; assumption.
    - (* j <> i *)
       assert (H6 := fix_p _ _ _ _ _ _ _ _ H5).
       rewrite H6.
-      intros ([ Hjeq | Hjmem ] & Hjmems).
-      + rewrite Hjeq in Hjmems; contradiction.
-      + apply HR12 with (j := j). now split.
+      intros [ Hjeq | Hjmem ].
+      + contradiction.
+      + now apply HR12.
 Qed.
 
 
@@ -4795,9 +4795,10 @@ intros r.
 rewrite r.
 cut (E1 k s (i + 1) v nnvl nnvu np /\ E2 k s (i + 1) v nnvl nnvu np /\ E3 k s (i + 1) v nnvl nnvu np /\ E4 k s (i + 1) v nnvl nnvu np).
 intros (HE1 & HE2 & HE3 & HE4).
-repeat split; [ exact HE1 | exact HE2 | exact HE3 |].
-intros j (Hjmemp & Hjmems); apply HE4 with j.
-now split.
+split; [ exact HE1 |].
+split; [ exact HE2 |].
+split; [ exact HE3 |].
+intros j Hjmemp. now apply HE4.
 apply H0.
 (* préservation des require *)
 (* ugh *)
@@ -4959,6 +4960,8 @@ destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & _ & H1).
 now apply H1.
 destruct H1 as (_ & _ & _ & _ & _ & _ & _ & _ & _ & _ & H1).
 now apply H1.
+now apply H1.
+now apply H1.
 (* lien rec *)
 rewrite <- findAXp_aux_spec4.
 reflexivity.
@@ -5026,12 +5029,12 @@ lia.
 (* post cond 4 *)
 unfold E4.
 unfold findAXp_aux.
-intros j (H1 & H2).
+intros j H1.
 unfold R12 in H.
-apply H with (j).
+apply H.
 replace (nb_feature - nb_feature) with 0 in H1; [| lia ].
 simpl in H1.
-now split.
+assumption.
 Qed.
 
 
@@ -5357,7 +5360,7 @@ Proof.
    assumption.
    (* R12 *)
    unfold R12.
-   intros j (absurd & _).
+   intros j absurd.
    inversion absurd.
 Qed.
 
@@ -5384,7 +5387,7 @@ length vu = nb_feature /\
 ->  (((mem j x1 \/ j>x) /\ ~ mem j s) /\ get j vl=get j v /\ get j vu=get j v) 
 \/ ( ((not (mem j x1 \/ j>x)) \/ mem j s) /\ get j vl=lambda j /\ get j vu = nu j) )
 /\ (k vl) <> (k vu))
-/\ forall (j : nat), mem j (findAXp k s v) -> ~ mem j s.
+/\ forall (j : nat), mem j (findAXp k s v) -> j < nb_feature /\ ~ mem j s.
 Proof.
    intros.
    destruct H as (k_stable, H).
@@ -5453,7 +5456,6 @@ Proof.
    unfold R_implies_E_AXp.
    unfold E4.
    intros.
-   intros absurd.
    eapply H0 with (i := 0) (j := j).
    apply k_stable.
    lia.
@@ -5471,7 +5473,7 @@ Proof.
    split; [ exact HR11 | exact HR12].
    unfold findAXp in H1.
    rewrite <- Heqp in H1.
-   now split.
+   assumption.
    (* hypothèses pour appliquer Hpre *)
    clear Hpre.
    destruct H as (Hvlength & HAXp & Hboundsv).
@@ -6134,7 +6136,10 @@ Proof.
    split; [ apply axp_is_set; tauto |].
    split; [ apply init_is_set |].
    intros e He.
-Admitted.
+   apply pre_post_findAXp in He.
+   now apply init_correct.
+   tauto.
+Qed.
 
 Lemma axp_seeded : forall (k : list T -> Tk) (s : list nat) (v : list T),
 stable k
@@ -6168,15 +6173,16 @@ Proof.
    unfold findAXp in H1.
    destruct (initVectors s v) as (vl, vu) eqn:Hv.
    assert (HE4 : E4 k s 0 v vl vu nil).
-   cut (forall j, mem j (findAXp k s v) -> ~ mem j s).
+   cut (forall j, mem j (findAXp k s v) -> j < nb_feature /\ ~ mem j s).
    unfold E4; intros. eapply H2.
    unfold findAXp. rewrite Hv. apply H3.
-   apply H3.
+   (* apply H3. *)
    apply pre_post_findAXp. tauto.
    unfold E4 in HE4.
    intros absurd.
    eapply HE4.
-   split; [ exact H1 | exact absurd ].
+   exact H1.
+   exact absurd.
 Qed.
 
 
