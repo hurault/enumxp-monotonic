@@ -5375,7 +5375,7 @@ led (lambda j) (get j v) /\ led (get j v) (nu j))
 -> 
    is_weak_AXp k v (findAXp k s v)
 /\ is_sorted (findAXp k s v)
-/\ forall (x:nat), forall (x0 x1 : list nat), ((findAXp k s v) = x0++(x::x1)
+/\ (forall (x:nat), forall (x0 x1 : list nat), (findAXp k s v) = x0++(x::x1)
 -> 
 exists  (vl vu : list T),
 length vl = nb_feature /\
@@ -5851,7 +5851,7 @@ Proof.
    split.
    apply k_stable.
    apply H.
-   destruct H2.
+   destruct H2 as (H2 & H3 & _).
    apply (H3 x x0 x1).
    auto.
 Qed.
