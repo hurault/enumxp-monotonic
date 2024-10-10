@@ -6100,7 +6100,7 @@ auto.
 Qed.
 
 
-Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
+Lemma axp_is_set : forall (k : list T -> Tk) (s : list nat) (v : list T),
 stable k
 -> (
 length v = nb_feature
@@ -6109,10 +6109,94 @@ is_weak_AXp k v (diff (init nb_feature) s)
 /\
 (forall (j:nat), j>=0 /\ j< nb_feature -> 
   led (lambda j) (get j v) /\ led (get j v) (nu j))
--> is_AXp k v (findAXp k s v)
+-> is_set (findAXp k s v)
 ).
 Proof.
    intros.
+   apply sorted_is_set.
+   apply pre_post_findAXp.
+   tauto.
+Qed.
+
+Lemma axp_is_subset_features : forall (k : list T -> Tk) (s : list nat) (v : list T),
+stable k
+-> (
+length v = nb_feature
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
+(forall (j:nat), j>=0 /\ j< nb_feature -> 
+  led (lambda j) (get j v) /\ led (get j v) (nu j))
+-> is_subset (findAXp k s v) (init nb_feature)
+).
+Proof.
+   intros.
+   split; [ apply axp_is_set; tauto |].
+   split; [ apply init_is_set |].
+   intros e He.
+Admitted.
+
+Lemma axp_seeded : forall (k : list T -> Tk) (s : list nat) (v : list T),
+stable k
+-> (
+length v = nb_feature
+/\
+is_set s
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
+(forall (j:nat), j>=0 /\ j< nb_feature -> 
+  led (lambda j) (get j v) /\ led (get j v) (nu j))
+-> is_subset (findAXp k s v) (diff (init nb_feature) s)
+).
+Proof.
+   intros.
+   unfold is_subset.
+   split.
+   apply axp_is_set.
+   assumption.
+   tauto.
+   split.
+   apply diff_is_set.
+   apply init_is_set.
+   now destruct H0 as (_ & H0 & _).
+   intros e H1.
+   apply diff_correct. split.
+   assert (H2 := axp_is_subset_features k s v).
+   repeat (lapply H2; [ clear H2; intros H2 | tauto ]).
+   apply H2, H1.
+   unfold findAXp in H1.
+   destruct (initVectors s v) as (vl, vu) eqn:Hv.
+   assert (HE4 : E4 k s 0 v vl vu nil).
+   cut (forall j, mem j (findAXp k s v) -> ~ mem j s).
+   unfold E4; intros. eapply H2.
+   unfold findAXp. rewrite Hv. apply H3.
+   apply H3.
+   apply pre_post_findAXp. tauto.
+   unfold E4 in HE4.
+   intros absurd.
+   eapply HE4.
+   split; [ exact H1 | exact absurd ].
+Qed.
+
+
+Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
+stable k
+-> (
+length v = nb_feature
+/\
+is_set s
+/\
+is_weak_AXp k v (diff (init nb_feature) s)
+/\
+(forall (j:nat), j>=0 /\ j< nb_feature -> 
+  led (lambda j) (get j v) /\ led (get j v) (nu j))
+-> is_AXp k v (findAXp k s v)
+/\ is_subset (findAXp k s v) (diff (init nb_feature) s)
+).
+Proof.
+   intros.
+   split.
    unfold is_AXp.
    split.
    apply minus_one_all_aux1.
@@ -6120,6 +6204,9 @@ Proof.
    intro.
    apply (minus_one_implies_subset k v (findAXp k s v)) .
    apply minus_one_all_aux2.
+   tauto.
+   apply axp_seeded.
+   tauto.
    tauto.
 Qed.
 
