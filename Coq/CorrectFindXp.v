@@ -5884,6 +5884,8 @@ intros.
 destruct H as (k_stable,H').
 assert (H := conj (proj1 H') (proj2 (proj2 H'))).
 destruct H' as (_ & H' & _).
+assert (Hpost : forall j, mem j (findAXp k s v) -> ~ mem j s).
+{ apply pre_post_findAXp. tauto. }
 cut (exists (x:nat) (x0 x1 :list nat),
   (findAXp k s v = (x0++(x::x1))) /\ (q = x0++x1)).
 intros.
@@ -5956,7 +5958,10 @@ apply H2.
 apply H5.
 cut False.
 tauto.
-(* lia. *) admit.
+assert (H6 : ~ mem j s).
+apply Hpost. rewrite decomp_find. now apply mem_append_2.
+destruct H5 as ([ H5 | absurd ] & H7); [| contradiction ].
+lia.
 apply (axp_inter_aux2 k s v x x0 x1).
 split.
 apply k_stable.
@@ -5973,7 +5978,10 @@ lia.
 apply H5.
 cut False.
 tauto.
-(* tauto. *) admit.
+assert (H6 : ~ mem j s).
+apply Hpost. rewrite decomp_find. apply mem_append_3. now right.
+destruct H5 as ([ H5 | absurd ] & H7); [| contradiction ].
+tauto.
 cut ( mem j q).
 rewrite defq.
 apply mem_append.
@@ -6026,7 +6034,10 @@ apply H2.
 apply H5.
 cut False.
 tauto.
-(* lia. *) admit.
+assert (H6 : ~ mem j s).
+apply Hpost. rewrite decomp_find. now apply mem_append_2.
+destruct H5 as ([ H5 | absurd ] & H7); [| contradiction ].
+lia.
 apply (axp_inter_aux2 k s v x x0 x1).
 split.
 apply k_stable.
@@ -6043,7 +6054,10 @@ lia.
 apply H5.
 cut False.
 tauto.
-(* tauto. *) admit.
+assert (H6 : ~ mem j s).
+apply Hpost. rewrite decomp_find. apply mem_append_3. now right.
+destruct H5 as ([ H5 | absurd ] & H7); [| contradiction ].
+tauto.
 cut ( mem j q).
 rewrite defq.
 apply mem_append.
@@ -6083,7 +6097,7 @@ apply decomp_find.
 generalize H0.
 unfold is_minus_one.
 auto.
-Admitted.
+Qed.
 
 
 Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
