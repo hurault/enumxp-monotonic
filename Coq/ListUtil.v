@@ -1,4 +1,5 @@
 Require Import Arith Lia Init.Datatypes List.
+Require Import Coq.Logic.Classical.
 
 Open Scope list_scope.
 
@@ -411,4 +412,99 @@ Theorem mapi_nth {A B : Type} (f : nat -> A -> B) l j err :
   nth j (mapi f l) (f j err) = f j (nth j l err).
 Proof.
   apply mapi_aux_nth.
+Qed.
+
+
+Fixpoint is_set {a:Type} (l:list a) : Prop :=
+  match l with
+  | nil => True
+  | t::q => not (mem t q) /\ (is_set q)
+  end.
+
+Definition is_subset {a:Type} (l1 l2 : list a) : Prop :=
+  (is_set l1) /\ (is_set l2) /\ (forall (e : a), mem e l1 -> mem e l2) .
+  
+Definition is_strict_subset  {a:Type} (l1 : list a) (l2 : list a) : Prop :=
+  (is_subset l1 l2) /\ (exists (e : a), mem e l2 /\ not (mem e l1)).
+
+Definition leq {a:Type} (l1 l2: list a) : Prop :=
+   forall (e : a), mem e l1 <-> mem e l2.
+
+Lemma is_subset_leq_or_is_strict_subset  {a:Type} : forall (l1 l2: list a),
+   is_subset l1 l2 -> leq l1 l2 \/ is_strict_subset l1 l2.
+Proof.
+   intro l1.
+   intro l2.
+   intro.
+   cut ((exists (e : a), mem e l2 /\ not (mem e l1)) \/ ~(exists (e : a), mem e l2 /\ not (mem e l1))).
+   intro d.
+   destruct d.
+   (* exists (e : a), mem e l2 /\ not (mem e l1) *)
+   right.
+   unfold is_strict_subset.
+   tauto.
+   (* ~ exists (e : a), mem e l2 /\ not (mem e l1) *)
+   left.
+   unfold is_subset in H.
+   destruct H.
+   destruct H1.
+   unfold leq.
+   split.
+   (* mem e l1 -> mem e l2 *)
+   auto.
+   (* mem e l2 -> mem e l1 *)
+   intro.
+   cut (mem e l1 \/ ~mem e l1).
+   intro d.
+   destruct d.
+   auto.
+   cut False.
+   tauto.
+   generalize H0.
+   unfold not.
+   intro.
+   apply H5.
+   exists e.
+   tauto.
+   tauto.
+   tauto.
+Qed.
+
+Lemma init_is_set (n : nat) :
+  is_set (init n).
+Proof.
+  induction n.
+  - now simpl.
+  - simpl. split.
+    + intros absurd.
+      apply init_correct in absurd.
+      lia.
+    + assumption.
+Qed.
+
+Lemma diff_is_set (s1 s2 : list nat) :
+  is_set s1 -> is_set s2 -> is_set (diff s1 s2).
+Proof.
+  intros.
+  induction s1.
+  - trivial.
+  - simpl.
+    inversion H.
+    destruct (mem_nat a s2) eqn:Heq.
+    + auto.
+    + split.
+      intros absurd. now apply diff_correct in absurd.
+      auto.
+Qed.
+
+Lemma sorted_is_set (s : list nat) :
+  is_sorted s -> is_set s.
+Proof.
+  induction s; intros H.
+  - trivial.
+  - inversion H. simpl. split.
+    + intros absurd.
+      cut (a > a). lia.
+      auto.
+    + auto.
 Qed.

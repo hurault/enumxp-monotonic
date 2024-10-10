@@ -5501,60 +5501,6 @@ Proof.
    eapply Hvals; tauto.
 Qed.
 
- Fixpoint is_set {a:Type} (l:list a) : Prop :=
-  match l with
-  | nil => True
-  | t::q => not (mem t q) /\ (is_set q)
-  end.
-
-Definition is_subset {a:Type} (l1 l2 : list a) : Prop :=
-  (is_set l1) /\ (is_set l2) /\ (forall (e : a), mem e l1 -> mem e l2) .
-  
-Definition is_strict_subset  {a:Type} (l1 : list a) (l2 : list a) : Prop :=
-  (is_subset l1 l2) /\ (exists (e : a), mem e l2 /\ not (mem e l1)).
-
-Definition leq {a:Type} (l1 l2: list a) : Prop :=
-   forall (e : a), mem e l1 <-> mem e l2.
-
-Lemma is_subset_leq_or_is_strict_subset  {a:Type} : forall (l1 l2: list a),
-   is_subset l1 l2 -> leq l1 l2 \/ is_strict_subset l1 l2.
-Proof.
-   intro l1.
-   intro l2.
-   intro.
-   cut ((exists (e : a), mem e l2 /\ not (mem e l1)) \/ ~(exists (e : a), mem e l2 /\ not (mem e l1))).
-   intro d.
-   destruct d.
-   (* exists (e : a), mem e l2 /\ not (mem e l1) *)
-   right.
-   unfold is_strict_subset.
-   tauto.
-   (* ~ exists (e : a), mem e l2 /\ not (mem e l1) *)
-   left.
-   unfold is_subset in H.
-   destruct H.
-   destruct H1.
-   unfold leq.
-   split.
-   (* mem e l1 -> mem e l2 *)
-   auto.
-   (* mem e l2 -> mem e l1 *)
-   intro.
-   cut (mem e l1 \/ ~mem e l1).
-   intro d.
-   destruct d.
-   auto.
-   cut False.
-   tauto.
-   generalize H0.
-   unfold not.
-   intro.
-   apply H5.
-   exists e.
-   tauto.
-   tauto.
-   tauto.
-Qed.
 
 Lemma leq_weak_id : forall (k : list T -> Tk ) (v:  list T) (l1 l2: list nat),
 leq l1 l2 -> (is_weak_AXp k v l1 <-> is_weak_AXp k v l2).
