@@ -15,6 +15,9 @@ Require Import MSets.
 Require Import MSetProperties.
 Require Import MSetInterface.
 
+From EnumXP Require Export FeatureProperties.
+From EnumXP Require Export CorrectFindXp.
+
 
 Inductive literal : Type :=
   | top : nat -> literal
@@ -437,8 +440,6 @@ Import NatSet.
 Module NatSetProp := MSetProperties.WPropertiesOn Nat_as_OT_Leibniz NatSet.
 
 Import NatSetProp.
-From EnumXP Require Export FeatureProperties.
-From EnumXP Require Export CorrectFindXp.
 
 Open Scope list_scope.
 
@@ -475,7 +476,39 @@ Definition sat_correct (sat:CNF.t -> option NatSet.t) : Prop :=
 sat_satis sat /\ sat_index_bound sat.
 
 
-Parameter findAXp: (list T -> Tk) -> (list T) -> NatSet.t -> NatSet.t.
+Lemma mem_equiv_in : forall (l : list nat) (x : nat),
+  List.In x l <-> In x (of_list l).
+Proof.
+  intros. split; intros H.
+  - (* -> *)
+    induction l; inversion H.
+    + subst. simpl. apply add_spec. now left.
+    + simpl. apply add_spec. right.
+      now apply IHl.
+  - (* <- *)
+    induction l.
+    + inversion H.
+    + apply add_spec in H. destruct H as [ Hl | Hr ].
+      * rewrite Hl. now left.
+      * right. now apply IHl.
+Qed.
+
+Lemma set_is_set : forall s, is_set (to_list s).
+Proof.
+  intros s. assert (H := elements_spec2w s).
+  replace (elements s) with (to_list s) in H; [| reflexivity ].
+  remember (to_list s) as l. clear Heql. clear s.
+  induction l.
+  - apply I.
+  - inversion H. split.
+    + rewrite ListUtil.mem_equiv_in. auto.
+    + now apply IHl.
+Qed.
+
+
+Definition findAXp (k : list T -> Tk) (l : list T) (s : NatSet.t) : NatSet.t :=
+  of_list (CorrectFindXp.findAXp k (to_list s) l).
+
 Parameter findCXp: (list T -> Tk) -> (list T) -> NatSet.t -> NatSet.t.
 
 
@@ -1172,12 +1205,130 @@ Definition is_seeded_AXp (k : list T -> Tk) (v: list T) (s p:NatSet.t) : Prop :=
 /\ NatSet.Subset p (NatSet.diff featureSet s) (* AXp in F\s *)
 /\ is_AXp k v p (* satisfy the constraint *).
 
-Axiom correct_findAXp : forall (k : list T -> Tk) (v:list T) (s:NatSet.t),
+
+Lemma is_waxp_link k v l :
+  is_weak_AXp k v (of_list l) <-> CorrectFindXp.is_weak_AXp k v l /\ valid_set (of_list l).
+Proof.
+  split.
+  - unfold is_weak_AXp, CorrectFindXp.is_weak_AXp.
+    intros H. split.
+    + intros x (H1 & H2 & H3 & H4).
+      apply H. repeat split; try lia.
+      apply H3; lia. apply H3; lia.
+      intros j Hj. specialize (H4 j Hj).
+      rewrite ListUtil.mem_equiv_in in H4.
+      rewrite mem_equiv_in in H4.
+      exact H4.
+    + apply H.
+  - unfold is_weak_AXp, CorrectFindXp.is_weak_AXp.
+    intros (H1 & H2). split.
+    + apply H2.
+    + intros x (H3 & H4 & H5 & H6).
+      apply H1. repeat split; try lia.
+      apply H5; lia. apply H5; lia.
+      intros j Hj. specialize (H6 j Hj).
+      rewrite ListUtil.mem_equiv_in.
+      rewrite <- mem_equiv_in in H6.
+      exact H6.
+Qed.
+
+Instance is_waxp_proper k v : Proper (Equal ==> flip impl) (is_weak_AXp k v).
+Proof.
+  unfold Proper, respectful, flip, impl.
+  unfold is_weak_AXp. intros x y Heq (H1 & H2). split.
+  unfold valid_set, For_all in H1. unfold valid_set, For_all.
+  intros; now apply H1, Heq.
+  intros l (H3 & H4 & H5 & H6). apply H2. unfold is_bounded in H5.
+  repeat split; try assumption; try (now apply H5).
+  intros j Hj. rewrite <- Heq. now apply H6.
+Qed.
+
+
+Theorem correct_findAXp : forall (k : list T -> Tk) (v:list T) (s:NatSet.t),
    stable k
 /\ is_weak_AXp k v (NatSet.diff featureSet s)
 /\ length v = nb_feature
 /\ is_bounded v
 -> is_seeded_AXp k v s (findAXp k v s).
+Proof.
+  intros.
+  assert (Lem := axp_all k (to_list s) v).
+  lapply Lem; clear Lem; [ intros Lem |].
+  lapply Lem; clear Lem; [ intros Lem |].
+  lapply Lem; clear Lem; [ intros Lem |].
+  lapply Lem; clear Lem; [ intros Lem |].
+  lapply Lem; clear Lem; [ intros Lem |].
+
+  - (* Finish the proof *)
+    destruct Lem as (IsCorrect & IsSet1 & IsSet2 & IsSubset).
+    split; [| split ].
+    + admit. (* need hypothesis on S *)
+    + unfold Subset, findAXp.
+      intros a Ha.
+      lapply (IsSubset a).
+      * intros Hmem.
+        apply diff_correct in Hmem. destruct Hmem as (Hmem1 & Hmem2).
+        rewrite ListUtil.mem_equiv_in, mem_equiv_in in Hmem1.
+        rewrite ListUtil.mem_equiv_in, mem_equiv_in in Hmem2.
+        apply diff_spec. split.
+        rewrite <- mem_equiv_in in Hmem1.
+        apply ListUtil.mem_equiv_in, init_correct in Hmem1.
+        apply in_valid_set_in_featureSet; lia.
+        rewrite of_list_3 in Hmem2. assumption.
+      * rewrite ListUtil.mem_equiv_in, mem_equiv_in.
+        exact Ha.
+    + unfold CorrectFindXp.is_AXp in IsCorrect.
+      destruct IsCorrect as (IsWAXp & IsMinimal).
+      unfold is_AXp.
+      split. apply is_waxp_link. split. exact IsWAXp.
+      unfold valid_set, For_all. intros x Hx.
+      rewrite <- mem_equiv_in, <- ListUtil.mem_equiv_in in Hx.
+      specialize (IsSubset x Hx). apply diff_correct in IsSubset.
+      destruct IsSubset as (IsSubset & _). now apply init_correct in IsSubset.
+      intros q Hq. destruct (eq_dec q (findAXp k v s)).
+      now left. right. intros absurd. apply IsMinimal with (q := to_list q).
+      unfold is_strict_subset. split.
+      unfold Subset in Hq. unfold is_subset.
+      split. apply set_is_set. split. assumption.
+      intros e He.
+      rewrite ListUtil.mem_equiv_in, mem_equiv_in, of_list_3 in He.
+      specialize (Hq e He). unfold findAXp in Hq.
+      now rewrite ListUtil.mem_equiv_in, mem_equiv_in.
+      cut (exists e : nat, In e (diff (findAXp k v s) q)).
+      intros (e & He). apply diff_spec in He. destruct He as (He1 & He2).
+      exists e. split. unfold findAXp in He1.
+      now rewrite ListUtil.mem_equiv_in, mem_equiv_in.
+      now rewrite ListUtil.mem_equiv_in, mem_equiv_in, of_list_3.
+      cut (~ Empty (diff (findAXp k v s) q)).
+      intros H1. rewrite cardinal_Empty in H1. apply cardinal_inv_2b in H1.
+      destruct H1 as (e & H1). exists e. exact H1.
+      intros absurd2. apply n. split; intros Ha.
+      apply Hq, Ha. apply NNPP. intros absurd3.
+      apply absurd2 with (a := a). now apply diff_spec.
+      apply is_waxp_link. now rewrite of_list_3.
+  
+  - intros. unfold is_bounded in H. apply H. lia.
+  - apply is_waxp_link.
+    cut (Equal (diff featureSet s) (of_list (ListUtil.diff (init nb_feature) (to_list s)))).
+    intros r; now rewrite <- r.
+    split; intros Ha.
+    rewrite <- mem_equiv_in, <- ListUtil.mem_equiv_in.
+    apply diff_correct. apply diff_spec in Ha. destruct Ha as (Ha1 & Ha2).
+    split. apply init_correct. apply featureSet_aux_prop2 in Ha1. assumption.
+    now rewrite ListUtil.mem_equiv_in, mem_equiv_in, of_list_3.
+    apply diff_spec. rewrite <- mem_equiv_in, <- ListUtil.mem_equiv_in in Ha.
+    apply diff_correct in Ha. destruct Ha as (Ha1 & Ha2). split.
+    apply featureSet_aux_prop1. apply init_correct in Ha1. assumption.
+    intros absurd. apply Ha2.
+    now rewrite ListUtil.mem_equiv_in, mem_equiv_in, of_list_3.
+  - apply set_is_set.
+  - lia.
+  - unfold stable in H. unfold CorrectFindXp.stable.
+    intros. apply H with (f2 := f2).
+    unfold is_bounded.
+    repeat split; try lia; try (apply H0; lia).
+Admitted.
+
 
 Lemma is_AXp_findAXp : forall (k : list T -> Tk) (v:list T) (s:NatSet.t),
    stable k

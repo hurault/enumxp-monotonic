@@ -6187,19 +6187,14 @@ Qed.
 
 
 Theorem axp_all : forall (k : list T -> Tk) (s : list nat) (v:list T),
-stable k
--> (
-length v = nb_feature
-/\
-is_set s
-/\
-is_weak_AXp k v (diff (init nb_feature) s)
-/\
-(forall (j:nat), j>=0 /\ j< nb_feature -> 
-  led (lambda j) (get j v) /\ led (get j v) (nu j))
--> is_AXp k v (findAXp k s v)
-/\ is_subset (findAXp k s v) (diff (init nb_feature) s)
-).
+   stable k ->
+   length v = nb_feature ->
+   is_set s ->
+   is_weak_AXp k v (diff (init nb_feature) s) ->
+   (forall (j:nat), j>=0 /\ j< nb_feature -> 
+      led (lambda j) (get j v) /\ led (get j v) (nu j)) ->
+   is_AXp k v (findAXp k s v)
+   /\ is_subset (findAXp k s v) (diff (init nb_feature) s).
 Proof.
    intros.
    split.
