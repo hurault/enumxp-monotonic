@@ -1201,8 +1201,7 @@ Definition eq_free_s (k : list T -> Tk) (v:list T) (s :NatSet.t) : Prop :=
   *)
 
 Definition is_seeded_AXp (k : list T -> Tk) (v: list T) (s p:NatSet.t) : Prop :=
-   valid_set s (* s in P(F) *)
-/\ NatSet.Subset p (NatSet.diff featureSet s) (* AXp in F\s *)
+   NatSet.Subset p (NatSet.diff featureSet s) (* AXp in F\s *)
 /\ is_AXp k v p (* satisfy the constraint *).
 
 
@@ -1261,8 +1260,7 @@ Proof.
 
   - (* Finish the proof *)
     destruct Lem as (IsCorrect & IsSet1 & IsSet2 & IsSubset).
-    split; [| split ].
-    + admit. (* need hypothesis on S *)
+    split.
     + unfold Subset, findAXp.
       intros a Ha.
       lapply (IsSubset a).
@@ -1327,7 +1325,7 @@ Proof.
     intros. apply H with (f2 := f2).
     unfold is_bounded.
     repeat split; try lia; try (apply H0; lia).
-Admitted.
+Qed.
 
 
 Lemma is_AXp_findAXp : forall (k : list T -> Tk) (v:list T) (s:NatSet.t),
@@ -1342,8 +1340,7 @@ Proof.
   specialize H0 with (k:=k) (v:=v) (s:=s).
   apply H0 in H.
   destruct H.
-  destruct H1.
-  exact H2.
+  exact H1.
 Qed.
 
 Lemma valid_set_findAXp : forall (k : list T -> Tk) (v:list T) (s:NatSet.t),
@@ -1357,12 +1354,11 @@ Proof.
   pose proof correct_findAXp.
   specialize H0 with (k:=k) (v:=v) (s:=s).
   apply H0 in H.
-  destruct H.
-  destruct H1.
+  destruct H as (H1 & H2).
   pose proof NatSetProp.subset_trans.
-  specialize H3 with (s1:=(findAXp k v s)) (s2:=(diff featureSet s)) (s3:=featureSet).
+  specialize H with (s1:=(findAXp k v s)) (s2:=(diff featureSet s)) (s3:=featureSet).
   rewrite valid_set_in_featureSet.
-  apply H3.
+  apply H.
   exact H1.
   apply NatSetProp.subset_diff.
   apply NatSetProp.subset_refl.
@@ -2916,25 +2912,23 @@ Proof.
   assert (NH := conj H (conj s_waxp H0)).
   clear H.
   apply H8 in NH.
-  destruct NH.
-  destruct H10.
-  destruct H11.
+  destruct NH as (H10 & H11).
   clear H0 H1 H8.
-  intro.
+  intro H0.
   apply H7 in H0.
-  destruct H0.
-  destruct H0.
-  destruct H0.
+  destruct H0 as (x0 & H0).
+  destruct H0 as [ H0 | H0 ].
+  destruct H0 as (H0 & H1).
   apply AXp2Clause_inv in H0.
   unfold NatSet.Subset in H10.
   specialize H10 with (a:=x0).
   apply H10 in H0.
   apply NatSet.diff_spec in H0.
-  destruct H0.
+  destruct H0 as (H0 & H8).
   absurd (NatSet.In x0 s).
   exact H8.
   exact H1.
-  destruct H0.
+  destruct H0 as (H0 & H1).
   apply AXp2Clause_range in H0.
   elim H0.
   intro.
