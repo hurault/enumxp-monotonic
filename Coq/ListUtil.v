@@ -17,6 +17,19 @@ Fixpoint mem_nat (i:nat) (p: list nat) : bool :=
   | nil => false
   | x :: q => if (eq_nat_dec i x) then true else (mem_nat i q) 
   end.
+
+
+Lemma mem_equiv_in : forall (l : list nat) (i : nat),
+  mem i l <-> In i l.
+Proof.
+  intros; split.
+  - induction l; intros; inversion H.
+    + now left.
+    + right. now apply IHl.
+  - induction l; intros; inversion H.
+    + now left.
+    + right. now apply IHl.
+Qed.
  
 
 Lemma mem_coherent : forall (i:nat) (p: list nat), mem_nat i p = true <-> mem i p.
